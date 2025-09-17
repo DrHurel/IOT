@@ -1,9 +1,3 @@
 project(esp32 C CXX ASM)
 
-set(CMAKE_CXX_STANDARD 23)
-set(CMAKE_CXX_STANDARD_REQUIRED ON)
-
-set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
-project(esp32 C CXX ASM)
-
 add_subdirectory(apps)
