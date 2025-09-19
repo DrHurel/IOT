@@ -35,7 +35,6 @@ class ClassCreator:
         choices = {
             "Application": "apps",
             "Library": "libs",
-            "Unit tests": "testing/unit_tests",
         }
         selection = questionary.select(
             "In which module do you want to create the class",
@@ -153,23 +152,23 @@ class ClassCreator:
             result_file = self._process_file(
                 os.path.join(template_folder, file), destination_folder, dictionary
             )
-            if result_file.endswith(".cxx"):
+            if result_file.endswith(".cpp"):
                 self._patch_cmakelists(result_file)
         termcolor.cprint(class_name + " created", "black", "on_green")
 
-    def _get_cxx_files(self, folder: str) -> list[str]:
-        cxx_files: list[str] = []
+    def _get_cpp_files(self, folder: str) -> list[str]:
+        cpp_files: list[str] = []
         for root, _, files in os.walk(folder):
             for file in files:
-                if file.endswith(".cxx"):
+                if file.endswith(".cpp"):
                     relative_path = os.path.relpath(root, folder)
-                    cxx_files.append(
+                    cpp_files.append(
                         file
                         if relative_path == "."
                         else os.path.join(relative_path, file)
                     )
-        cxx_files.sort()
-        return cxx_files
+        cpp_files.sort()
+        return cpp_files
 
     def _patch_cmakelists(self, file: str):
         _dir = os.path.dirname(file)
@@ -195,13 +194,13 @@ class ClassCreator:
             match = re.search(regex, content)
             assert match
             groups = match.groups()
-            cxx_files = self._get_cxx_files(_dir)
+            cpp_files = self._get_cpp_files(_dir)
             if is_lib:
                 content = (
                     groups[0]
                     + groups[1]
                     + "\n\t"
-                    + "\n\t".join(cxx_files)
+                    + "\n\t".join(cpp_files)
                     + "\n)"
                     + groups[5]
                 )
@@ -210,7 +209,7 @@ class ClassCreator:
                     groups[0]
                     + groups[1]
                     + "\n\t"
-                    + "\n\t".join(cxx_files)
+                    + "\n\t".join(cpp_files)
                     + "\n)"
                     + groups[4]
                 )

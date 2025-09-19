@@ -3,12 +3,8 @@
 #include <common/patterns/Singleton.h>
 
 /*
- * Soft: Valorisation Engine
  * Author: $AUTHOR$
  * Creation date: $DATE$
- * This program is part of the Free Mobile product line,
- * All right reserved to Iliad.
- * Copyright (C) 2004-2011 Iliad,
  */
 
 namespace $NAMESPACE$ {
