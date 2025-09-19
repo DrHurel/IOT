@@ -57,7 +57,8 @@ class ClassCreator:
                 os.chdir(path)
                 return dest_folder
 
-    def _is_namespace_valid(self, namespace: str) -> bool:
+    @staticmethod
+    def _is_namespace_valid( namespace: str) -> bool:
         return re.search(r"^[a-z]\w*(\:\:[a-z]\w*)*$", namespace) is not None
 
     def _create_destination_folder(self, destination_folder: str):
