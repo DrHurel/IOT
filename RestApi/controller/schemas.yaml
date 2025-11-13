@@ -1,0 +1,92 @@
+components:
+  schemas:
+    WateringTriggerRequest:
+      type: object
+      properties:
+        duration:
+          type: integer
+          description: Duration of watering in seconds
+          minimum: 1
+          maximum: 300
+          example: 30
+        quantity:
+          type: number
+          description: Quantity of water in milliliters (optional, overrides duration)
+          minimum: 0
+          example: 500
+
+    WateringTriggerResponse:
+      type: object
+      properties:
+        status:
+          type: string
+          example: "started"
+        timestamp:
+          type: string
+          format: date-time
+        estimatedDuration:
+          type: integer
+          description: Estimated duration in seconds
+
+    PairingRequest:
+      type: object
+      required:
+        - deviceId
+      properties:
+        deviceId:
+          type: string
+          description: Mobile device identifier
+          example: "mobile-device-12345"
+
+    PairingResponse:
+      type: object
+      properties:
+        status:
+          type: string
+          example: "pairing_initiated"
+        pairingCode:
+          type: string
+          description: Pairing code to confirm on mobile device
+
+    WiFiConfigRequest:
+      type: object
+      required:
+        - ssid
+        - password
+      properties:
+        ssid:
+          type: string
+          description: WiFi network SSID
+          example: "MyHomeNetwork"
+        password:
+          type: string
+          description: WiFi network password
+          format: password
+
+    WiFiConfigResponse:
+      type: object
+      properties:
+        status:
+          type: string
+          example: "connected"
+        ip:
+          type: string
+          description: Assigned IP address
+          example: "192.168.1.100"
+
+    SystemInfo:
+      type: object
+      properties:
+        controllerId:
+          type: string
+          description: Unique controller identifier
+        firmwareVersion:
+          type: string
+          example: "1.0.0"
+        wifiConnected:
+          type: boolean
+        serverConnected:
+          type: boolean
+        uptime:
+          type: integer
+          description: System uptime in seconds

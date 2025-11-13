@@ -1,0 +1,11 @@
+@startuml controller_archi
+
+package "common" {
+    abstract class "App" {
+        +void setup()
+        +void run()
+    }
+
+    class "ControllerApp" extends "App" {}
+}
+@enduml

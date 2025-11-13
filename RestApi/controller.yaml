@@ -1,0 +1,166 @@
+openapi: 3.0.3
+info:
+  title: IoT Plant Watering Controller API
+  description: API for the microcontroller managing plant watering system sensors and actuators
+  version: 1.0.0
+  contact:
+    name: Plant Watering System
+
+servers:
+  - url: http://{controller-ip}:8080/api/v1
+    description: Controller local network endpoint
+    variables:
+      controller-ip:
+        default: 192.168.1.100
+        description: IP address of the controller on local network
+
+tags:
+  - name: sensors
+    description: Sensor data collection and management
+  - name: watering
+    description: Watering control operations
+  - name: system
+    description: System configuration and pairing
+
+paths:
+  /sensors:
+    get:
+      tags:
+        - sensors
+      summary: Get list of available sensors
+      description: Returns the list of all sensors available on the controller
+      operationId: getSensors
+      responses:
+        '200':
+          description: List of sensors
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  sensors:
+                    type: array
+                    items:
+                      $ref: './common/schemas.yaml#/components/schemas/Sensor'
+        '500':
+          $ref: './common/responses.yaml#/components/responses/InternalServerError'
+
+  /sensors/data:
+    get:
+      tags:
+        - sensors
+      summary: Get current sensor data
+      description: Returns current readings from all sensors
+      operationId: getSensorData
+      responses:
+        '200':
+          description: Current sensor readings
+          content:
+            application/json:
+              schema:
+                $ref: './common/schemas.yaml#/components/schemas/SensorData'
+        '500':
+          $ref: './common/responses.yaml#/components/responses/InternalServerError'
+
+  /watering/trigger:
+    post:
+      tags:
+        - watering
+      summary: Trigger watering manually
+      description: Manually triggers the watering system
+      operationId: triggerWatering
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: './controller/schemas.yaml#/components/schemas/WateringTriggerRequest'
+      responses:
+        '200':
+          description: Watering triggered successfully
+          content:
+            application/json:
+              schema:
+                $ref: './controller/schemas.yaml#/components/schemas/WateringTriggerResponse'
+        '400':
+          $ref: './common/responses.yaml#/components/responses/BadRequest'
+        '503':
+          $ref: './common/responses.yaml#/components/responses/ServiceUnavailable'
+
+  /watering/status:
+    get:
+      tags:
+        - watering
+      summary: Get watering system status
+      description: Returns the current status of the watering system
+      operationId: getWateringStatus
+      responses:
+        '200':
+          description: Watering status
+          content:
+            application/json:
+              schema:
+                $ref: './common/schemas.yaml#/components/schemas/WateringStatus'
+
+  /system/pair:
+    post:
+      tags:
+        - system
+      summary: Pair with mobile device via Bluetooth
+      description: Initiates pairing process with mobile device for initial WiFi configuration
+      operationId: pairDevice
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: './controller/schemas.yaml#/components/schemas/PairingRequest'
+      responses:
+        '200':
+          description: Pairing initiated
+          content:
+            application/json:
+              schema:
+                $ref: './controller/schemas.yaml#/components/schemas/PairingResponse'
+        '409':
+          $ref: './common/responses.yaml#/components/responses/Conflict'
+
+  /system/wifi:
+    post:
+      tags:
+        - system
+      summary: Configure WiFi connection
+      description: Configure WiFi network settings (requires prior pairing)
+      operationId: configureWifi
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: './controller/schemas.yaml#/components/schemas/WiFiConfigRequest'
+      responses:
+        '200':
+          description: WiFi configured successfully
+          content:
+            application/json:
+              schema:
+                $ref: './controller/schemas.yaml#/components/schemas/WiFiConfigResponse'
+        '400':
+          $ref: './common/responses.yaml#/components/responses/BadRequest'
+        '401':
+          $ref: './common/responses.yaml#/components/responses/UnauthorizedError'
+
+  /system/info:
+    get:
+      tags:
+        - system
+      summary: Get controller information
+      description: Returns information about the controller
+      operationId: getSystemInfo
+      responses:
+        '200':
+          description: Controller information
+          content:
+            application/json:
+              schema:
+                $ref: './controller/schemas.yaml#/components/schemas/SystemInfo'

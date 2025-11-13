@@ -1,0 +1,99 @@
+components:
+  schemas:
+    Controller:
+      type: object
+      properties:
+        id:
+          type: string
+        name:
+          type: string
+        userId:
+          type: string
+          format: uuid
+        status:
+          type: string
+          enum: [online, offline, error]
+        location:
+          $ref: '../../common/schemas.yaml#/components/schemas/Location'
+        firmwareVersion:
+          type: string
+        lastSeen:
+          type: string
+          format: date-time
+        createdAt:
+          type: string
+          format: date-time
+        updatedAt:
+          type: string
+          format: date-time
+
+    ControllerDetail:
+      allOf:
+        - $ref: '#/components/schemas/Controller'
+        - type: object
+          properties:
+            associatedPlants:
+              type: array
+              items:
+                $ref: '../schemas/plant.yaml#/components/schemas/Plant'
+            currentSensorData:
+              allOf:
+                - $ref: '../../common/schemas.yaml#/components/schemas/SensorData'
+                - type: object
+                  properties:
+                    waterReservoirLevel:
+                      type: number
+
+    ControllerRegisterRequest:
+      type: object
+      required:
+        - controllerId
+        - name
+      properties:
+        controllerId:
+          type: string
+          description: Unique controller identifier
+        name:
+          type: string
+          description: Friendly name for the controller
+        location:
+          $ref: '../../common/schemas.yaml#/components/schemas/Location'
+
+    ControllerUpdateRequest:
+      type: object
+      properties:
+        name:
+          type: string
+        location:
+          $ref: '../../common/schemas.yaml#/components/schemas/Location'
+
+    ControllerStatusUpdate:
+      type: object
+      properties:
+        status:
+          type: string
+          enum: [online, offline, error]
+        sensorData:
+          $ref: '../../common/schemas.yaml#/components/schemas/SensorData'
+        waterReservoirLevel:
+          type: number
+          minimum: 0
+          maximum: 100
+
+    ControllerStatusResponse:
+      type: object
+      properties:
+        message:
+          type: string
+          example: "Status updated successfully"
+        actions:
+          type: array
+          description: Actions to perform (e.g., automatic watering)
+          items:
+            type: object
+            properties:
+              type:
+                type: string
+                enum: [water, alert]
+              parameters:
+                type: object

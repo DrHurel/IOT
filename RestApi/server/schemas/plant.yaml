@@ -1,0 +1,117 @@
+components:
+  schemas:
+    PlantConfiguration:
+      type: object
+      description: Configuration thresholds and settings for a plant
+      properties:
+        optimalTemperature:
+          $ref: '../../common/schemas.yaml#/components/schemas/TemperatureRange'
+        optimalHumidity:
+          $ref: '../../common/schemas.yaml#/components/schemas/HumidityRange'
+        wateringCycle:
+          type: integer
+          description: Time between two watering cycles in hours
+          example: 48
+        waterQuantityPerCycle:
+          type: number
+          description: Water quantity per cycle in milliliters
+          example: 500
+        autoWateringEnabled:
+          type: boolean
+          description: Enable automatic watering based on thresholds
+          default: true
+
+    Plant:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        name:
+          type: string
+          example: "Mon Basilic"
+        species:
+          type: string
+          example: "Basilic"
+        controllerId:
+          type: string
+          description: Associated controller ID
+        location:
+          $ref: '../../common/schemas.yaml#/components/schemas/Location'
+        configuration:
+          $ref: '#/components/schemas/PlantConfiguration'
+        status:
+          type: string
+          enum: [active, inactive, maintenance]
+        createdAt:
+          type: string
+          format: date-time
+        updatedAt:
+          type: string
+          format: date-time
+
+    PlantDetail:
+      allOf:
+        - $ref: '#/components/schemas/Plant'
+        - type: object
+          properties:
+            currentMeasurements:
+              allOf:
+                - $ref: '../../common/schemas.yaml#/components/schemas/SensorData'
+            lastWatering:
+              type: string
+              format: date-time
+            nextScheduledWatering:
+              type: string
+              format: date-time
+
+    PlantCreateRequest:
+      type: object
+      required:
+        - name
+        - species
+        - controllerId
+      properties:
+        name:
+          type: string
+        species:
+          type: string
+        controllerId:
+          type: string
+        location:
+          $ref: '../../common/schemas.yaml#/components/schemas/Location'
+        configuration:
+          $ref: '#/components/schemas/PlantConfiguration'
+
+    PlantUpdateRequest:
+      type: object
+      properties:
+        name:
+          type: string
+        species:
+          type: string
+        location:
+          $ref: '../../common/schemas.yaml#/components/schemas/Location'
+        configuration:
+          $ref: '#/components/schemas/PlantConfiguration'
+        status:
+          type: string
+          enum: [active, inactive, maintenance]
+
+    PlantConfigTemplate:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        species:
+          type: string
+          example: "Basilic"
+        commonNames:
+          type: array
+          items:
+            type: string
+        defaultConfiguration:
+          $ref: '#/components/schemas/PlantConfiguration'
+        description:
+          type: string

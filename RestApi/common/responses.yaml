@@ -1,0 +1,47 @@
+components:
+  responses:
+    # Common Error Responses
+    BadRequest:
+      description: Invalid request
+      content:
+        application/json:
+          schema:
+            $ref: '../common/schemas.yaml#/components/schemas/Error'
+
+    UnauthorizedError:
+      description: Access token is missing or invalid
+      content:
+        application/json:
+          schema:
+            $ref: '../common/schemas.yaml#/components/schemas/Error'
+
+    NotFound:
+      description: Resource not found
+      content:
+        application/json:
+          schema:
+            $ref: '../common/schemas.yaml#/components/schemas/Error'
+
+    Conflict:
+      description: Resource conflict (e.g., already exists)
+      content:
+        application/json:
+          schema:
+            $ref: '../common/schemas.yaml#/components/schemas/Error'
+
+    InternalServerError:
+      description: Internal server error
+      content:
+        application/json:
+          schema:
+            $ref: '../common/schemas.yaml#/components/schemas/Error'
+
+    ServiceUnavailable:
+      description: Service temporarily unavailable
+      content:
+        application/json:
+          schema:
+            $ref: '../common/schemas.yaml#/components/schemas/Error'
+
+    NoContent:
+      description: Operation successful, no content to return

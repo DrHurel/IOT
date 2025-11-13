@@ -1,0 +1,146 @@
+components:
+  schemas:
+    # Common Error Schema
+    Error:
+      type: object
+      required:
+        - code
+        - message
+      properties:
+        code:
+          type: string
+          description: Error code
+        message:
+          type: string
+          description: Error message
+        details:
+          type: object
+          description: Additional error details
+        timestamp:
+          type: string
+          format: date-time
+
+    # Location Schema (used by both plants and controllers)
+    Location:
+      type: object
+      properties:
+        latitude:
+          type: number
+          format: double
+          minimum: -90
+          maximum: 90
+          example: 48.8566
+        longitude:
+          type: number
+          format: double
+          minimum: -180
+          maximum: 180
+          example: 2.3522
+        address:
+          type: string
+          example: "Paris, France"
+        room:
+          type: string
+          example: "Salon"
+
+    # Pagination Schema
+    Pagination:
+      type: object
+      properties:
+        limit:
+          type: integer
+        offset:
+          type: integer
+        hasMore:
+          type: boolean
+
+    # Sensor Data Schema (used by both server and controller)
+    SensorData:
+      type: object
+      properties:
+        timestamp:
+          type: string
+          format: date-time
+          description: Timestamp of the reading
+        temperature:
+          type: number
+          format: float
+          description: Temperature in Celsius
+          example: 22.5
+        humidity:
+          type: number
+          format: float
+          description: Humidity percentage
+          minimum: 0
+          maximum: 100
+          example: 65.0
+        luminosity:
+          type: number
+          format: float
+          description: Luminosity in lux
+          minimum: 0
+          example: 450.0
+
+    # Sensor Schema
+    Sensor:
+      type: object
+      properties:
+        id:
+          type: string
+          description: Sensor identifier
+          example: "temp-1"
+        type:
+          type: string
+          enum: [temperature, humidity, luminosity]
+          description: Type of sensor
+        unit:
+          type: string
+          description: Unit of measurement
+          example: "°C"
+        status:
+          type: string
+          enum: [active, inactive, error]
+          description: Sensor operational status
+
+    # Temperature Range Schema
+    TemperatureRange:
+      type: object
+      properties:
+        min:
+          type: number
+          format: float
+          example: 18.0
+        max:
+          type: number
+          format: float
+          example: 25.0
+
+    # Humidity Range Schema
+    HumidityRange:
+      type: object
+      properties:
+        min:
+          type: number
+          format: float
+          example: 40.0
+        max:
+          type: number
+          format: float
+          example: 60.0
+
+    # Watering Status Schema
+    WateringStatus:
+      type: object
+      properties:
+        active:
+          type: boolean
+          description: Whether watering is currently active
+        lastWatering:
+          type: string
+          format: date-time
+          description: Timestamp of last watering
+        waterReservoirLevel:
+          type: number
+          description: Current water reservoir level in percentage
+          minimum: 0
+          maximum: 100
