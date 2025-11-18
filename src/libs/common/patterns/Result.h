@@ -1,9 +1,7 @@
 #pragma once
 
 #include <string>
-#include <source_location>
 #include <optional>
-#include <fmt/format.h>
 #include <assert.h>
 #include <type_traits>
 #include <source_location>
@@ -18,8 +16,13 @@ namespace common::patterns
         std::source_location location_;
 
     public:
-        explicit Error(std::string const &message) : message_(message) {}
+        explicit Error(std::string const &message, std::source_location location = std::source_location::current()) : message_(message), location_(location) {}
         std::string const &message() const { return message_; }
+
+        operator std::string() const
+        {
+            return "Error: " + message_ + " at " + location_.file_name() + ":" + std::to_string(location_.line());
+        }
     };
 
     class BaseResult
