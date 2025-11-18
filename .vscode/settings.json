@@ -1,4 +1,3 @@
 {
-    "sonarlint.pathToCompileCommands": "${workspaceFolder}/Builds/compile_commands.json",
-    "python.analysis.typeCheckingMode": "strict"
+    "sonarlint.pathToCompileCommands": "${workspaceFolder}/Builds/compile_commands.json"
 }
