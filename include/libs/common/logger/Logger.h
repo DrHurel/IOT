@@ -15,6 +15,11 @@ namespace common::logger
     {
     public:
         virtual ~Logger() = default;
+        Logger() = default;
+        Logger(const Logger &) = delete;
+        Logger(Logger &&) = delete;
+        Logger &operator=(const Logger &) = delete;
+        Logger &operator=(Logger &&) = delete;
 
         void debug(const char *message) { log(LogLevel::Debug, message); }
         void info(const char *message) { log(LogLevel::Info, message); }
