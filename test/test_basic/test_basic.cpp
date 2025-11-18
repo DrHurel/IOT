@@ -30,6 +30,21 @@ void test_basic_string() {
     TEST_ASSERT_EQUAL_STRING("Hello", str);
 }
 
+#ifdef NATIVE_TEST
+// For native (desktop) platform
+int main(int argc, char **argv) {
+    UNITY_BEGIN();
+    
+    RUN_TEST(test_basic_addition);
+    RUN_TEST(test_basic_subtraction);
+    RUN_TEST(test_basic_multiplication);
+    RUN_TEST(test_basic_comparison);
+    RUN_TEST(test_basic_string);
+    
+    return UNITY_END();
+}
+#else
+// For Arduino platform
 void setup() {
     UNITY_BEGIN();
     
@@ -45,3 +60,4 @@ void setup() {
 void loop() {
     // Nothing to do here
 }
+#endif
