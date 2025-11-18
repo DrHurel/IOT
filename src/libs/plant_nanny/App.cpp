@@ -25,6 +25,19 @@ namespace plant_nanny
 
         auto logger = common::service::get<common::logger::Logger>();
 
-        logger->info("App Started");
+        logger->info("App Initialized");
+    }
+
+    void App::run() const
+    {
+        // Main application loop
+        auto logger = common::service::get<common::logger::Logger>();
+        logger->debug("App running");
+    }
+
+    void App::shutdown()
+    {
+        auto logger = common::service::get<common::logger::Logger>();
+        logger->info("App shutting down");
     }
 }
