@@ -1,6 +1,6 @@
 #include <libs/common/logger/SerialLogger.h>
 
-#ifdef ENABLE_SERIAL_LOGGING
+#ifdef DEBUG
 #include <HardwareSerial.h>
 #endif
 
@@ -8,7 +8,7 @@ namespace common::logger
 {
     void SerialLogger::log(LogLevel level, const char *message)
     {
-#ifdef ENABLE_SERIAL_LOGGING
+#ifdef DEBUG
         const char *levelStr = "";
         switch (level)
         {
