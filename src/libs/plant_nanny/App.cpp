@@ -3,8 +3,7 @@
 #include <libs/common/logger/Logger.h>
 #include <libs/common/logger/SerialLogger.h>
 #include <libs/common/service/Accessor.h>
-
-
+#include <libs/common/logger/MQTTLogger.h>
 namespace plant_nanny
 {
 
@@ -19,12 +18,13 @@ namespace plant_nanny
 #ifndef DEBUG
         common::service::add<common::logger::Logger, common::logger::SerialLogger>();
 #endif
-
+#ifndef RELEASE
+        common::service::add<common::logger::Logger, common::logger::MQTTLogger>(_mqtt_client.get());
+#endif
 
 
         auto logger = common::service::get<common::logger::Logger>();
 
         logger->info("App Started");
-
     }
 }
