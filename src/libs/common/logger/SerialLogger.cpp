@@ -6,6 +6,12 @@
 
 namespace common::logger
 {
+    SerialLogger::SerialLogger()
+    {
+        // Serial port is initialized elsewhere
+        // No need to initialize it here
+    }
+
     void SerialLogger::log(LogLevel level, const char *message)
     {
 #ifdef DEBUG
@@ -36,8 +42,8 @@ namespace common::logger
 #else
         // In production builds, this function body is empty
         // The compiler will optimize it away completely (zero overhead)
-        (void)level;    // Suppress unused parameter warning
-        (void)message;  // Suppress unused parameter warning
+        (void)level;   // Suppress unused parameter warning
+        (void)message; // Suppress unused parameter warning
 #endif
     }
 }
