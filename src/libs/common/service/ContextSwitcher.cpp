@@ -1,6 +1,6 @@
-#include "ContextSwitcher.h"
+#include "libs/common/service/ContextSwitcher.h"
 
-#include <common/service/Registry.h>
+#include <libs/common/service/Registry.h>
 #include <string_view>
 namespace common::service::registry
 {

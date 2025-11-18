@@ -5,7 +5,7 @@
  * Creation date: 2025-09-19
  */
 
-namespace um {
+namespace common {
 class App {
    public:
     App() noexcept = default;
@@ -19,4 +19,4 @@ class App {
     virtual void run() const = 0;
     virtual void shutdown() = 0;
 };
-} // namespace um
+} // namespace common

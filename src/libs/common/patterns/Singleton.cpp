@@ -1,4 +1,4 @@
-#include "Singleton.h"
+#include <libs/common/patterns/Singleton.h>
 
 #include <unordered_map>
 #include <cassert>

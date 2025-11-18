@@ -1,7 +1,7 @@
 
 #pragma once
 
-#include <common/service/Registry.h>
+#include <libs/common/service/Registry.h>
 
 namespace common::service
 {
