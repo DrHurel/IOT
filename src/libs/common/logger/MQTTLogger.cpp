@@ -5,9 +5,6 @@ namespace common::logger
 {
     void MQTTLogger::log(LogLevel level, const char *message)
     {
-        // Placeholder implementation for MQTT logging
-        // In a real implementation, this would publish the log message to an MQTT topic
-
         const char *levelStr = "";
         switch (level)
         {
@@ -28,10 +25,8 @@ namespace common::logger
             break;
         }
 
-        // Format the message
         std::string formattedMessage = "[" + std::string(levelStr) + "] " + std::string(message);
 
-        // use MQTT client to publish the message
         _mqtt_client->publish("logs/topic", formattedMessage.c_str());
 
     }

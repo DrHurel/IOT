@@ -6,11 +6,7 @@
 
 namespace common::logger
 {
-    SerialLogger::SerialLogger()
-    {
-        // Serial port is initialized elsewhere
-        // No need to initialize it here
-    }
+    SerialLogger::SerialLogger(){}
 
     void SerialLogger::log(LogLevel level, const char *message)
     {

@@ -3,3 +3,4 @@ dateparser
 questionary
 docker
 psutil
+pytest
