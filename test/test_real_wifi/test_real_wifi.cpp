@@ -15,8 +15,14 @@ void test_load_wifi_credentials_from_env()
 {
     test::mocks::MockNetworkService network_service;
     
+#ifdef NATIVE_TEST
+    std::string env_path = std::string(PROJECT_DIR) + "/.env";
+#else
+    std::string env_path = "/.env";
+#endif
+    
     // Load credentials from .env file
-    auto load_result = network_service.load_credentials_from_env("/home/hurel/repo/IOT/.env");
+    auto load_result = network_service.load_credentials_from_env(env_path);
     
     TEST_ASSERT_TRUE_MESSAGE(load_result.succeed(), "Failed to load credentials from .env file");
     
@@ -38,8 +44,14 @@ void test_connect_with_env_credentials()
 {
     test::mocks::MockNetworkService network_service;
     
+#ifdef NATIVE_TEST
+    std::string env_path = std::string(PROJECT_DIR) + "/.env";
+#else
+    std::string env_path = "/.env";
+#endif
+    
     // Load credentials from .env file
-    auto load_result = network_service.load_credentials_from_env("/home/hurel/repo/IOT/.env");
+    auto load_result = network_service.load_credentials_from_env(env_path);
     TEST_ASSERT_TRUE_MESSAGE(load_result.succeed(), "Failed to load credentials from .env file");
     
     // Attempt to connect (mock will succeed by default)
@@ -67,8 +79,14 @@ void test_get_network_info()
 {
     test::mocks::MockNetworkService network_service;
     
+#ifdef NATIVE_TEST
+    std::string env_path = std::string(PROJECT_DIR) + "/.env";
+#else
+    std::string env_path = "/.env";
+#endif
+    
     // Load credentials and connect
-    network_service.load_credentials_from_env("/home/hurel/repo/IOT/.env");
+    network_service.load_credentials_from_env(env_path);
     network_service.connect();
     
     // Get IP address

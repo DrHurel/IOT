@@ -12,6 +12,13 @@ fi
 
 sudo apt-get update
 sudo apt-get install python3 python3-pip python3-venv -y
+
+# Install PlatformIO if not already installed
+if [ ! -f "$HOME/.platformio/penv/bin/platformio" ]; then
+    echo "Installing PlatformIO..."
+    python3 -c "$(curl -fsSL https://raw.githubusercontent.com/platformio/platformio/master/scripts/get-platformio.py)"
+fi
+
 if [ ! -d "$UM_ROOT_PATH/.venv" ]; then
     echo "Creating virtual environment..."
     python3 -m venv "$UM_ROOT_PATH/.venv"
