@@ -3,10 +3,10 @@
 
 namespace plant_nanny::services::ota
 {
-    UpdateOrchestrator::UpdateOrchestrator(network::INetworkService& net_service)
+    UpdateOrchestrator::UpdateOrchestrator()
         : logger_(common::service::get<common::logger::Logger>())
         , ota_manager_(std::make_unique<ota::Manager>())
-        , network_service_(net_service)
+        , network_service_(common::service::get<network::INetworkService>())
         , bytes_downloaded_(0)
         , total_bytes_(0)
     {
@@ -15,7 +15,7 @@ namespace plant_nanny::services::ota
 
     common::patterns::Result<void> UpdateOrchestrator::update_from_url(const std::string& firmware_url)
     {
-        if (!network_service_.is_connected())
+        if (!network_service_->is_connected())
         {
             LOG_IF_AVAILABLE(logger_, error, "Network not connected");
             return common::patterns::Result<void>::failure(
@@ -37,7 +37,7 @@ namespace plant_nanny::services::ota
         total_bytes_ = 0;
 
         // Download and write firmware
-        auto download_result = network_service_.download_file(
+        auto download_result = network_service_->download_file(
             firmware_url,
             [this](const uint8_t* data, size_t length) -> bool {
                 auto write_result = ota_manager_->write_chunk(data, length);

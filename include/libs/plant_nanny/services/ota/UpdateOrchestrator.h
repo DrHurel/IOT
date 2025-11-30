@@ -15,13 +15,13 @@ namespace plant_nanny::services::ota
     private:
         common::service::Accessor<common::logger::Logger> logger_;
         std::unique_ptr<ota::Manager> ota_manager_;
-        network::INetworkService& network_service_;
-        
+        common::service::Accessor<network::INetworkService> network_service_;
+
         size_t bytes_downloaded_;
         size_t total_bytes_;
 
     public:
-        explicit UpdateOrchestrator(network::INetworkService& net_service);
+        explicit UpdateOrchestrator();
         ~UpdateOrchestrator() = default;
         UpdateOrchestrator(const UpdateOrchestrator &) = delete;
         UpdateOrchestrator &operator=(const UpdateOrchestrator &) = delete;
@@ -29,8 +29,8 @@ namespace plant_nanny::services::ota
         UpdateOrchestrator &operator=(UpdateOrchestrator &&) = delete;
 
         // Perform OTA update from URL
-        common::patterns::Result<void> update_from_url(const std::string& firmware_url);
-        
+        common::patterns::Result<void> update_from_url(const std::string &firmware_url);
+
         // Get progress (0-100)
         uint8_t get_progress() const;
     };

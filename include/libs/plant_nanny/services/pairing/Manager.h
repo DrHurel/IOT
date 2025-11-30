@@ -20,6 +20,8 @@ namespace plant_nanny::services::pairing
 
         bool is_paired() const;
 
+        common::patterns::Result<void> unpair();
+        common::patterns::Result<void> pair_device(const std::string& device_code);
     };
 
 }

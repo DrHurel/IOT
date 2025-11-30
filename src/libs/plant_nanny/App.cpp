@@ -31,11 +31,11 @@ namespace plant_nanny
 #endif
 
         common::service::add<services::network::INetworkService, services::network::Manager>();
-        
+
         auto network_service = common::service::get<services::network::INetworkService>();
         if (network_service.is_available())
         {
-            common::service::add<services::ota::UpdateOrchestrator>(network_service.get());
+            common::service::add<services::ota::UpdateOrchestrator, services::ota::UpdateOrchestrator>();
         }
 
         auto logger = common::service::get<common::logger::Logger>();
@@ -53,7 +53,7 @@ namespace plant_nanny
         {
             network_service->maintain_connection();
         }
-        
+
         auto logger = common::service::get<common::logger::Logger>();
         if (logger.is_available())
         {
@@ -68,7 +68,7 @@ namespace plant_nanny
         {
             logger->info("App shutting down");
         }
-        
+
         auto network_service = common::service::get<services::network::INetworkService>();
         if (network_service.is_available())
         {
@@ -76,14 +76,14 @@ namespace plant_nanny
         }
     }
 
-    void App::configure_wifi(const std::string& ssid, const std::string& password)
+    void App::configure_wifi(const std::string &ssid, const std::string &password)
     {
         auto network_service = common::service::get<services::network::INetworkService>();
         if (network_service.is_available())
         {
             network_service->set_credentials(ssid, password);
             auto result = network_service->connect();
-            
+
             auto logger = common::service::get<common::logger::Logger>();
             if (result.succeed())
             {
@@ -93,7 +93,7 @@ namespace plant_nanny
                     auto ip = network_service->get_ip_address();
                     if (ip.succeed())
                     {
-                        logger->info("IP Address: " + ip.value());
+                        logger->info(("IP Address: " + ip.value()).c_str());
                     }
                 }
             }
@@ -113,11 +113,11 @@ namespace plant_nanny
         return network_service.is_available() && network_service->is_connected();
     }
 
-    common::patterns::Result<void> App::perform_ota_update(const std::string& firmware_url)
+    common::patterns::Result<void> App::perform_ota_update(const std::string &firmware_url)
     {
         auto logger = common::service::get<common::logger::Logger>();
         auto network_service = common::service::get<services::network::INetworkService>();
-        
+
         if (!network_service.is_available() || !network_service->is_connected())
         {
             if (logger.is_available())
@@ -125,13 +125,12 @@ namespace plant_nanny
                 logger->error("OTA update failed: Network not connected");
             }
             return common::patterns::Result<void>::failure(
-                common::patterns::Error("Network not connected")
-            );
+                common::patterns::Error("Network not connected"));
         }
 
         if (logger.is_available())
         {
-            logger->info("Starting OTA update from: " + firmware_url);
+            logger->info(("Starting OTA update from: " + firmware_url).c_str());
         }
 
         auto ota_orchestrator = common::service::get<services::ota::UpdateOrchestrator>();
@@ -142,12 +141,11 @@ namespace plant_nanny
                 logger->error("OTA orchestrator not available");
             }
             return common::patterns::Result<void>::failure(
-                common::patterns::Error("OTA orchestrator not available")
-            );
+                common::patterns::Error("OTA orchestrator not available"));
         }
 
         auto result = ota_orchestrator->update_from_url(firmware_url);
-        
+
         if (result.succeed())
         {
             if (logger.is_available())
@@ -164,7 +162,7 @@ namespace plant_nanny
                 logger->error("OTA update failed");
             }
         }
-        
+
         return result;
     }
 }
