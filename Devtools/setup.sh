@@ -45,3 +45,11 @@ else
     echo ".env file already exists. Skipping WiFi credential setup."
     echo "To update credentials, edit $UM_ROOT_PATH/.env manually."
 fi
+
+# install nodejs and npm
+if ! command -v node &> /dev/null; then
+    echo "Installing Node.js and npm..."
+    curl -fsSL https://deb.nodesource.com/setup_18.x | sudo -E bash -
+    sudo apt-get install -y nodejs
+fi
+npm install
