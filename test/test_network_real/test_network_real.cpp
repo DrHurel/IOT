@@ -1,5 +1,5 @@
 #include <unity.h>
-#include "mocks/MockNetworkService.h"
+#include "testing/libs/plant_nanny/services/network/MockINetworkService.h"
 #include <fstream>
 #include <string>
 
@@ -74,9 +74,9 @@ void test_real_load_wifi_credentials()
 void test_real_mock_with_env_credentials()
 {
     // Create service with real connection mode enabled
-    test::mocks::MockNetworkConfig config;
+    testing::mocks::MockNetworkConfig config;
     config.use_real_connection = true;
-    test::mocks::MockNetworkService network_service(config);
+    testing::mocks::MockNetworkService network_service(config);
 
 #ifdef NATIVE_TEST
     std::string env_path = std::string(PROJECT_DIR) + "/.env";
@@ -118,7 +118,7 @@ void test_real_mock_with_env_credentials()
 
 void test_real_connection_error_handling()
 {
-    test::mocks::MockNetworkService network_service;
+    testing::mocks::MockNetworkService network_service;
 
     // Test with invalid path
     auto load_result = network_service.load_credentials_from_env("/invalid/path/.env");
@@ -140,9 +140,9 @@ void test_real_connection_error_handling()
 void test_real_simulated_connection_failure()
 {
     // Create service with connection failure configured
-    test::mocks::MockNetworkConfig config;
+    testing::mocks::MockNetworkConfig config;
     config.connect_should_succeed = false;
-    test::mocks::MockNetworkService network_service(config);
+    testing::mocks::MockNetworkService network_service(config);
 
 #ifdef NATIVE_TEST
     std::string env_path = std::string(PROJECT_DIR) + "/.env";
@@ -165,9 +165,9 @@ void test_real_simulated_connection_failure()
 void test_real_connection_without_credentials()
 {
     // Create service with real connection mode enabled
-    test::mocks::MockNetworkConfig config;
+    testing::mocks::MockNetworkConfig config;
     config.use_real_connection = true;
-    test::mocks::MockNetworkService network_service(config);
+    testing::mocks::MockNetworkService network_service(config);
 
     // Try to connect without setting credentials
     auto connect_result = network_service.connect();
@@ -181,9 +181,9 @@ void test_real_connection_without_credentials()
 void test_real_reconnection_scenario()
 {
     // Create service with real connection mode enabled
-    test::mocks::MockNetworkConfig config;
+    testing::mocks::MockNetworkConfig config;
     config.use_real_connection = true;
-    test::mocks::MockNetworkService network_service(config);
+    testing::mocks::MockNetworkService network_service(config);
 
 #ifdef NATIVE_TEST
     std::string env_path = std::string(PROJECT_DIR) + "/.env";
@@ -212,9 +212,9 @@ void test_real_reconnection_scenario()
 void test_real_network_operations()
 {
     // Create service with real connection mode enabled
-    test::mocks::MockNetworkConfig config;
+    testing::mocks::MockNetworkConfig config;
     config.use_real_connection = true;
-    test::mocks::MockNetworkService network_service(config);
+    testing::mocks::MockNetworkService network_service(config);
 
 #ifdef NATIVE_TEST
     std::string env_path = std::string(PROJECT_DIR) + "/.env";

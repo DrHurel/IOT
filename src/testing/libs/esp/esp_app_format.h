@@ -7,7 +7,8 @@
 
 static constexpr uint32_t ESP_APP_DESC_MAGIC_WORD = 0xABCD5432;
 
-typedef struct {
+typedef struct
+{
     uint32_t magic_word;
     uint32_t secure_version;
     uint32_t reserv1[2];
@@ -20,7 +21,7 @@ typedef struct {
     uint32_t reserv2[20];
 } esp_app_desc_t;
 
-inline const esp_app_desc_t* esp_app_get_description(void)
+inline const esp_app_desc_t *esp_app_get_description(void)
 {
     static esp_app_desc_t mock_desc = {
         ESP_APP_DESC_MAGIC_WORD,
@@ -32,8 +33,7 @@ inline const esp_app_desc_t* esp_app_get_description(void)
         "Nov 23 2025",
         "v5.0",
         {0},
-        {0}
-    };
+        {0}};
     return &mock_desc;
 }
 

@@ -5,12 +5,14 @@
 #include <cstdint>
 #include "esp_err.h"
 
-typedef enum {
+typedef enum
+{
     ESP_PARTITION_TYPE_APP = 0x00,
     ESP_PARTITION_TYPE_DATA = 0x01,
 } esp_partition_type_t;
 
-typedef enum {
+typedef enum
+{
     ESP_PARTITION_SUBTYPE_APP_FACTORY = 0x00,
     ESP_PARTITION_SUBTYPE_APP_OTA_0 = 0x10,
     ESP_PARTITION_SUBTYPE_APP_OTA_1 = 0x11,
@@ -20,7 +22,8 @@ typedef enum {
     ESP_PARTITION_SUBTYPE_APP_OTA_5 = 0x15,
 } esp_partition_subtype_t;
 
-typedef struct esp_partition {
+typedef struct esp_partition
+{
     esp_partition_type_t type;
     esp_partition_subtype_t subtype;
     uint32_t address;
@@ -30,7 +33,7 @@ typedef struct esp_partition {
 } esp_partition_t;
 
 // Mock implementations
-inline const esp_partition_t* esp_ota_get_boot_partition(void)
+inline const esp_partition_t *esp_ota_get_boot_partition(void)
 {
     static esp_partition_t mock_partition = {
         ESP_PARTITION_TYPE_APP,
@@ -38,17 +41,16 @@ inline const esp_partition_t* esp_ota_get_boot_partition(void)
         0x10000,
         0x100000,
         "ota_0",
-        false
-    };
+        false};
     return &mock_partition;
 }
 
-inline const esp_partition_t* esp_ota_get_running_partition(void)
+inline const esp_partition_t *esp_ota_get_running_partition(void)
 {
     return esp_ota_get_boot_partition();
 }
 
-inline const esp_partition_t* esp_ota_get_next_update_partition(const esp_partition_t* start)
+inline const esp_partition_t *esp_ota_get_next_update_partition(const esp_partition_t *start)
 {
     static esp_partition_t mock_partition = {
         ESP_PARTITION_TYPE_APP,
@@ -56,8 +58,7 @@ inline const esp_partition_t* esp_ota_get_next_update_partition(const esp_partit
         0x110000,
         0x100000,
         "ota_1",
-        false
-    };
+        false};
     return &mock_partition;
 }
 

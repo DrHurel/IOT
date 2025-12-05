@@ -7,7 +7,7 @@
 #include <fstream>
 #include <cstdlib>
 
-namespace test::mocks
+namespace testing::mocks
 {
     struct MockNetworkConfig
     {
@@ -28,17 +28,16 @@ namespace test::mocks
 
     public:
         MockNetworkService() = default;
-        explicit MockNetworkService(const MockNetworkConfig& config) : config_(config) {}
+        explicit MockNetworkService(const MockNetworkConfig &config) : config_(config) {}
         ~MockNetworkService() override = default;
 
-        common::patterns::Result<void> load_credentials_from_env(const std::string& env_path = ".env")
+        common::patterns::Result<void> load_credentials_from_env(const std::string &env_path = ".env")
         {
             std::ifstream env_file(env_path);
             if (!env_file.is_open())
             {
                 return common::patterns::Result<void>::failure(
-                    common::patterns::Error("Failed to open .env file: " + env_path)
-                );
+                    common::patterns::Error("Failed to open .env file: " + env_path));
             }
 
             std::string line;
@@ -74,48 +73,44 @@ namespace test::mocks
             if (ssid_.empty())
             {
                 return common::patterns::Result<void>::failure(
-                    common::patterns::Error("WIFI_SSID not found or empty in .env file")
-                );
+                    common::patterns::Error("WIFI_SSID not found or empty in .env file"));
             }
 
             if (password_.empty())
             {
                 return common::patterns::Result<void>::failure(
-                    common::patterns::Error("WIFI_PASSWORD not found or empty in .env file")
-                );
+                    common::patterns::Error("WIFI_PASSWORD not found or empty in .env file"));
             }
 
             return common::patterns::Result<void>::success();
         }
 
-        common::patterns::Result<std::string> get_stored_ssid() const 
-        { 
+        common::patterns::Result<std::string> get_stored_ssid() const
+        {
             if (ssid_.empty())
             {
                 return common::patterns::Result<std::string>::failure(
-                    common::patterns::Error("SSID not set")
-                );
+                    common::patterns::Error("SSID not set"));
             }
             return common::patterns::Result<std::string>::success(ssid_);
         }
 
-        common::patterns::Result<std::string> get_stored_password() const 
-        { 
+        common::patterns::Result<std::string> get_stored_password() const
+        {
             if (password_.empty())
             {
                 return common::patterns::Result<std::string>::failure(
-                    common::patterns::Error("Password not set")
-                );
+                    common::patterns::Error("Password not set"));
             }
             return common::patterns::Result<std::string>::success(password_);
         }
 
-        const MockNetworkConfig& get_config() const { return config_; }
+        const MockNetworkConfig &get_config() const { return config_; }
 
         void test_set_connected(bool connected) { connected_ = connected; }
-        void test_update_config(const MockNetworkConfig& config) { config_ = config; }
+        void test_update_config(const MockNetworkConfig &config) { config_ = config; }
 
-        void set_credentials(const std::string& ssid, const std::string& password) override
+        void set_credentials(const std::string &ssid, const std::string &password) override
         {
             ssid_ = ssid;
             password_ = password;
@@ -129,8 +124,7 @@ namespace test::mocks
                 if (ssid_.empty())
                 {
                     return common::patterns::Result<void>::failure(
-                        common::patterns::Error("WiFi credentials not set")
-                    );
+                        common::patterns::Error("WiFi credentials not set"));
                 }
 
                 WiFi.mode(WIFI_STA);
@@ -153,30 +147,27 @@ namespace test::mocks
                 {
                     connected_ = false;
                     return common::patterns::Result<void>::failure(
-                        common::patterns::Error("Real WiFi connection failed")
-                    );
+                        common::patterns::Error("Real WiFi connection failed"));
                 }
 #else
                 if (ssid_.empty() || password_.empty())
                 {
                     return common::patterns::Result<void>::failure(
-                        common::patterns::Error("Real connection mode: WiFi credentials not set")
-                    );
+                        common::patterns::Error("Real connection mode: WiFi credentials not set"));
                 }
-                
+
                 connected_ = true;
                 return common::patterns::Result<void>::success();
 #endif
             }
-            
+
             if (config_.connect_should_succeed)
             {
                 connected_ = true;
                 return common::patterns::Result<void>::success();
             }
             return common::patterns::Result<void>::failure(
-                common::patterns::Error("Mock connection failed")
-            );
+                common::patterns::Error("Mock connection failed"));
         }
 
         void disconnect() override
@@ -198,8 +189,7 @@ namespace test::mocks
             if (!connected_)
             {
                 return common::patterns::Result<std::string>::failure(
-                    common::patterns::Error("Not connected")
-                );
+                    common::patterns::Error("Not connected"));
             }
             return common::patterns::Result<std::string>::success(config_.mock_ip);
         }
@@ -209,37 +199,33 @@ namespace test::mocks
             if (!connected_)
             {
                 return common::patterns::Result<int>::failure(
-                    common::patterns::Error("Not connected")
-                );
+                    common::patterns::Error("Not connected"));
             }
             return common::patterns::Result<int>::success(config_.mock_rssi);
         }
 
         common::patterns::Result<void> download_file(
-            const std::string& url,
-            std::function<bool(const uint8_t*, size_t)> chunk_handler,
+            const std::string &url,
+            std::function<bool(const uint8_t *, size_t)> chunk_handler,
             std::function<void(size_t, size_t)> progress_callback = nullptr) override
         {
             if (!connected_)
             {
                 return common::patterns::Result<void>::failure(
-                    common::patterns::Error("Not connected")
-                );
+                    common::patterns::Error("Not connected"));
             }
 
             if (!config_.download_should_succeed)
             {
                 return common::patterns::Result<void>::failure(
-                    common::patterns::Error("Mock download failed")
-                );
+                    common::patterns::Error("Mock download failed"));
             }
 
             uint8_t fake_data[] = {0x01, 0x02, 0x03, 0x04};
             if (!chunk_handler(fake_data, sizeof(fake_data)))
             {
                 return common::patterns::Result<void>::failure(
-                    common::patterns::Error("Chunk handler failed")
-                );
+                    common::patterns::Error("Chunk handler failed"));
             }
 
             if (progress_callback)
@@ -251,4 +237,4 @@ namespace test::mocks
         }
     };
 
-} // namespace test::mocks
+} // namespace testing::mocks

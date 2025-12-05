@@ -4,7 +4,7 @@
 #include <string>
 #include <cstdint>
 
-namespace test::mocks
+namespace testing::mocks
 {
     struct MockBluetoothConfig
     {
@@ -23,7 +23,7 @@ namespace test::mocks
 
     public:
         MockBluetoothService() = default;
-        explicit MockBluetoothService(const MockBluetoothConfig& config) : config_(config) {}
+        explicit MockBluetoothService(const MockBluetoothConfig &config) : config_(config) {}
         ~MockBluetoothService() override = default;
 
         common::patterns::Result<void> open_channel() override
@@ -34,8 +34,7 @@ namespace test::mocks
                 return common::patterns::Result<void>::success();
             }
             return common::patterns::Result<void>::failure(
-                common::patterns::Error("Mock: Failed to open Bluetooth channel")
-            );
+                common::patterns::Error("Mock: Failed to open Bluetooth channel"));
         }
 
         common::patterns::Result<void> close_channel() override
@@ -49,20 +48,18 @@ namespace test::mocks
             return channel_open_;
         }
 
-        common::patterns::Result<int> send_data(const std::string& data) override
+        common::patterns::Result<int> send_data(const std::string &data) override
         {
             if (!channel_open_)
             {
                 return common::patterns::Result<int>::failure(
-                    common::patterns::Error("Mock: Bluetooth channel is not open")
-                );
+                    common::patterns::Error("Mock: Bluetooth channel is not open"));
             }
 
             if (!config_.device_connected)
             {
                 return common::patterns::Result<int>::failure(
-                    common::patterns::Error("Mock: No device connected")
-                );
+                    common::patterns::Error("Mock: No device connected"));
             }
 
             return common::patterns::Result<int>::success(static_cast<int>(data.length()));
@@ -73,22 +70,19 @@ namespace test::mocks
             if (!channel_open_)
             {
                 return common::patterns::Result<std::string_view>::failure(
-                    common::patterns::Error("Mock: Bluetooth channel is not open")
-                );
+                    common::patterns::Error("Mock: Bluetooth channel is not open"));
             }
 
             if (!config_.device_connected)
             {
                 return common::patterns::Result<std::string_view>::failure(
-                    common::patterns::Error("Mock: No device connected")
-                );
+                    common::patterns::Error("Mock: No device connected"));
             }
 
             if (!config_.has_data_available)
             {
                 return common::patterns::Result<std::string_view>::failure(
-                    common::patterns::Error("Mock: No data available")
-                );
+                    common::patterns::Error("Mock: No data available"));
             }
 
             received_data_buffer_ = config_.mock_received_data;
@@ -98,8 +92,7 @@ namespace test::mocks
             }
 
             return common::patterns::Result<std::string_view>::success(
-                std::string_view(received_data_buffer_)
-            );
+                std::string_view(received_data_buffer_));
         }
 
         // Test helper methods
@@ -113,10 +106,10 @@ namespace test::mocks
             config_.has_data_available = available;
         }
 
-        void set_mock_data(const std::string& data)
+        void set_mock_data(const std::string &data)
         {
             config_.mock_received_data = data;
         }
     };
 
-} // namespace test::mocks
+} // namespace testing::mocks

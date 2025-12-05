@@ -21,11 +21,11 @@ void test_ota_state_initial_state()
 void test_ota_state_begin_update()
 {
     OTAState state;
-    const esp_partition_t* mock_partition = (const esp_partition_t*)0x1234;
+    const esp_partition_t *mock_partition = (const esp_partition_t *)0x1234;
     esp_ota_handle_t mock_handle = 0x5678;
-    
+
     state.begin_update(mock_partition, mock_handle);
-    
+
     TEST_ASSERT_TRUE(state.is_updating());
     TEST_ASSERT_EQUAL(mock_partition, state.partition());
     TEST_ASSERT_EQUAL(mock_handle, state.handle());
@@ -34,13 +34,13 @@ void test_ota_state_begin_update()
 void test_ota_state_add_bytes()
 {
     OTAState state;
-    const esp_partition_t* mock_partition = (const esp_partition_t*)0x1234;
+    const esp_partition_t *mock_partition = (const esp_partition_t *)0x1234;
     esp_ota_handle_t mock_handle = 0x5678;
-    
+
     state.begin_update(mock_partition, mock_handle);
     state.add_bytes(100);
     TEST_ASSERT_EQUAL(100, state.bytes_written());
-    
+
     state.add_bytes(50);
     TEST_ASSERT_EQUAL(150, state.bytes_written());
 }
@@ -48,13 +48,13 @@ void test_ota_state_add_bytes()
 void test_ota_state_reset()
 {
     OTAState state;
-    const esp_partition_t* mock_partition = (const esp_partition_t*)0x1234;
+    const esp_partition_t *mock_partition = (const esp_partition_t *)0x1234;
     esp_ota_handle_t mock_handle = 0x5678;
-    
+
     state.begin_update(mock_partition, mock_handle);
     state.add_bytes(1000);
     TEST_ASSERT_TRUE(state.is_updating());
-    
+
     state.reset();
     TEST_ASSERT_FALSE(state.is_updating());
     TEST_ASSERT_EQUAL(0, state.bytes_written());
@@ -71,7 +71,7 @@ void test_esp_error_to_result()
 {
     auto success = common::utils::EspError::to_result(ESP_OK, "Test");
     TEST_ASSERT_TRUE(success.succeed());
-    
+
     auto failure = common::utils::EspError::to_result(ESP_FAIL, "Test");
     TEST_ASSERT_TRUE(failure.failed());
 }
@@ -86,7 +86,7 @@ void test_esp_error_name()
 int main(int argc, char **argv)
 {
     UNITY_BEGIN();
-    
+
     RUN_TEST(test_ota_state_initial_state);
     RUN_TEST(test_ota_state_begin_update);
     RUN_TEST(test_ota_state_add_bytes);
@@ -94,15 +94,17 @@ int main(int argc, char **argv)
     RUN_TEST(test_esp_error_is_ok);
     RUN_TEST(test_esp_error_to_result);
     RUN_TEST(test_esp_error_name);
-    
+
     return UNITY_END();
 }
 #else
+#include <Arduino.h>
+
 void setup()
 {
     delay(2000);
     UNITY_BEGIN();
-    
+
     RUN_TEST(test_ota_state_initial_state);
     RUN_TEST(test_ota_state_begin_update);
     RUN_TEST(test_ota_state_add_bytes);
@@ -110,7 +112,7 @@ void setup()
     RUN_TEST(test_esp_error_is_ok);
     RUN_TEST(test_esp_error_to_result);
     RUN_TEST(test_esp_error_name);
-    
+
     UNITY_END();
 }
 

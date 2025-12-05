@@ -2,8 +2,8 @@
 #include "libs/common/service/Registry.h"
 
 #ifdef NATIVE_TEST
-#include "MockBluetoothService.h"
-using BluetoothManager = test::mocks::MockBluetoothService;
+#include "testing/libs/plant_nanny/services/bluetooth/MockManager.h"
+using BluetoothManager = testing::mocks::MockBluetoothService;
 #else
 #include "libs/plant_nanny/services/bluetooth/Manager.h"
 using BluetoothManager = plant_nanny::services::bluetooth::Manager;
@@ -11,13 +11,14 @@ using BluetoothManager = plant_nanny::services::bluetooth::Manager;
 
 using namespace common::patterns;
 
-BluetoothManager* btManager = nullptr;
+BluetoothManager *btManager = nullptr;
 
-void setUp(void) {
+void setUp(void)
+{
     common::service::DefaultRegistry::create();
     // Called before each test
 #ifdef NATIVE_TEST
-    test::mocks::MockBluetoothConfig config;
+    testing::mocks::MockBluetoothConfig config;
     config.channel_open_should_succeed = true;
     config.device_connected = true;
     config.has_data_available = false;
@@ -27,20 +28,24 @@ void setUp(void) {
 #endif
 }
 
-void tearDown(void) {
+void tearDown(void)
+{
     // Called after each test
-    if (btManager != nullptr) {
+    if (btManager != nullptr)
+    {
         delete btManager;
         btManager = nullptr;
     }
 }
 
-void test_bluetooth_initialization() {
+void test_bluetooth_initialization()
+{
     TEST_ASSERT_NOT_NULL(btManager);
     TEST_ASSERT_FALSE(btManager->is_channel_open());
 }
 
-void test_bluetooth_open_channel() {
+void test_bluetooth_open_channel()
+{
     auto result = btManager->open_channel();
 
 #ifdef NATIVE_TEST
@@ -54,7 +59,8 @@ void test_bluetooth_open_channel() {
 #endif
 }
 
-void test_bluetooth_close_channel() {
+void test_bluetooth_close_channel()
+{
     btManager->open_channel();
     auto result = btManager->close_channel();
 
@@ -66,7 +72,8 @@ void test_bluetooth_close_channel() {
 #endif
 }
 
-void test_bluetooth_send_data_without_open() {
+void test_bluetooth_send_data_without_open()
+{
     // Should fail if channel not open
     auto result = btManager->send_data("test data");
 
@@ -80,7 +87,8 @@ void test_bluetooth_send_data_without_open() {
 #endif
 }
 
-void test_bluetooth_send_data_with_open() {
+void test_bluetooth_send_data_with_open()
+{
     btManager->open_channel();
     auto result = btManager->send_data("Hello Bluetooth");
 
@@ -89,16 +97,20 @@ void test_bluetooth_send_data_with_open() {
     TEST_ASSERT_EQUAL(15, result.value()); // "Hello Bluetooth" is 15 chars
 #else
     // Real implementation may fail if no device connected
-    if (result.succeed()) {
+    if (result.succeed())
+    {
         TEST_ASSERT_GREATER_THAN(0, result.value());
-    } else {
+    }
+    else
+    {
         // Expected when no device connected
         TEST_ASSERT_TRUE(result.error().message().find("connected") != std::string::npos);
     }
 #endif
 }
 
-void test_bluetooth_receive_data_without_open() {
+void test_bluetooth_receive_data_without_open()
+{
     auto result = btManager->receive_data(256);
 
 #ifdef NATIVE_TEST
@@ -109,12 +121,13 @@ void test_bluetooth_receive_data_without_open() {
 #endif
 }
 
-void test_bluetooth_receive_data_with_open() {
+void test_bluetooth_receive_data_with_open()
+{
     btManager->open_channel();
 
 #ifdef NATIVE_TEST
     // Configure mock to have data
-    auto* mockBt = dynamic_cast<test::mocks::MockBluetoothService*>(btManager);
+    auto *mockBt = dynamic_cast<testing::mocks::MockBluetoothService *>(btManager);
     mockBt->set_data_available(true);
     mockBt->set_mock_data("Test data from BLE");
 #endif
@@ -127,14 +140,16 @@ void test_bluetooth_receive_data_with_open() {
     TEST_ASSERT_EQUAL_STRING("Test data from BLE", std::string(result.value()).c_str());
 #else
     // Real implementation - likely no data available
-    if (result.failed()) {
+    if (result.failed())
+    {
         TEST_ASSERT_TRUE(result.error().message().find("available") != std::string::npos ||
-                        result.error().message().find("connected") != std::string::npos);
+                         result.error().message().find("connected") != std::string::npos);
     }
 #endif
 }
 
-void test_bluetooth_send_empty_string() {
+void test_bluetooth_send_empty_string()
+{
     btManager->open_channel();
     auto result = btManager->send_data("");
 
@@ -142,13 +157,15 @@ void test_bluetooth_send_empty_string() {
     TEST_ASSERT_TRUE(result.succeed());
     TEST_ASSERT_EQUAL(0, result.value());
 #else
-    if (result.succeed()) {
+    if (result.succeed())
+    {
         TEST_ASSERT_EQUAL(0, result.value());
     }
 #endif
 }
 
-void test_bluetooth_send_large_data() {
+void test_bluetooth_send_large_data()
+{
     btManager->open_channel();
 
     // Create a string larger than typical MTU (23 bytes)
@@ -164,11 +181,12 @@ void test_bluetooth_send_large_data() {
 #endif
 }
 
-void test_bluetooth_receive_with_max_length() {
+void test_bluetooth_receive_with_max_length()
+{
     btManager->open_channel();
 
 #ifdef NATIVE_TEST
-    auto* mockBt = dynamic_cast<test::mocks::MockBluetoothService*>(btManager);
+    auto *mockBt = dynamic_cast<testing::mocks::MockBluetoothService *>(btManager);
     mockBt->set_data_available(true);
     mockBt->set_mock_data("This is a long string that should be truncated");
 #endif
@@ -187,9 +205,11 @@ void test_bluetooth_receive_with_max_length() {
 #endif
 }
 
-void test_bluetooth_multiple_open_close_cycles() {
+void test_bluetooth_multiple_open_close_cycles()
+{
     // Open and close multiple times
-    for (int i = 0; i < 3; i++) {
+    for (int i = 0; i < 3; i++)
+    {
         auto openResult = btManager->open_channel();
 
 #ifdef NATIVE_TEST
@@ -204,12 +224,13 @@ void test_bluetooth_multiple_open_close_cycles() {
     }
 }
 
-void test_bluetooth_destructor_closes_channel() {
+void test_bluetooth_destructor_closes_channel()
+{
 #ifdef NATIVE_TEST
-    test::mocks::MockBluetoothConfig config;
-    auto* tempManager = new BluetoothManager(config);
+    testing::mocks::MockBluetoothConfig config;
+    auto *tempManager = new BluetoothManager(config);
 #else
-    auto* tempManager = new BluetoothManager();
+    auto *tempManager = new BluetoothManager();
 #endif
     tempManager->open_channel();
 
@@ -219,7 +240,8 @@ void test_bluetooth_destructor_closes_channel() {
     TEST_ASSERT_TRUE(true); // If we get here, destructor worked
 }
 
-int main(int argc, char **argv) {
+int main(int argc, char **argv)
+{
     UNITY_BEGIN();
 
     RUN_TEST(test_bluetooth_initialization);

@@ -29,7 +29,7 @@ This guide explains how to test with real WiFi credentials using the `.env` file
 #include "mocks/MockNetworkService.h"
 
 // Create mock service
-test::mocks::MockNetworkService network_service;
+testing::mocks::MockNetworkService network_service;
 
 // Load credentials from .env file
 auto load_result = network_service.load_credentials_from_env("/home/hurel/repo/IOT/.env");
