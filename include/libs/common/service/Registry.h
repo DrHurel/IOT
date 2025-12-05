@@ -6,7 +6,6 @@
 #include <libs/common/service/Context.h>
 #include <string_view>
 
-
 namespace common::service::registry
 {
     class ContextSwitcher;

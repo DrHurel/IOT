@@ -80,10 +80,10 @@ namespace common::patterns
 
     // Specialization for reference types
     template <typename T>
-    class Result<T&> : public BaseResult
+    class Result<T &> : public BaseResult
     {
     public:
-        T& value() const
+        T &value() const
         {
             assert(succeed());
             assert(value_ != nullptr);
@@ -99,22 +99,22 @@ namespace common::patterns
         bool succeed() const override { return !error_.has_value(); }
         bool failed() const override { return error_.has_value(); }
 
-        static Result<T&> failure(Error const &error)
+        static Result<T &> failure(Error const &error)
         {
-            return Result<T&>(error);
+            return Result<T &>(error);
         }
 
-        static Result<T&> success(T& value)
+        static Result<T &> success(T &value)
         {
-            return Result<T&>(value);
+            return Result<T &>(value);
         }
 
     private:
-        std::remove_reference_t<T>* value_ = nullptr;
+        std::remove_reference_t<T> *value_ = nullptr;
         std::optional<Error> error_;
 
         explicit Result(Error const &error) : error_(error) {}
-        explicit Result(T& value) : value_(&value) {}
+        explicit Result(T &value) : value_(&value) {}
     };
 
     template <>

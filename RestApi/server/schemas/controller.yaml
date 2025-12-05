@@ -14,7 +14,7 @@ components:
           type: string
           enum: [online, offline, error]
         location:
-          $ref: '../../common/schemas.yaml#/components/schemas/Location'
+          $ref: "../../common/schemas.yaml#/components/schemas/Location"
         firmwareVersion:
           type: string
         lastSeen:
@@ -29,16 +29,16 @@ components:
 
     ControllerDetail:
       allOf:
-        - $ref: '#/components/schemas/Controller'
+        - $ref: "#/components/schemas/Controller"
         - type: object
           properties:
             associatedPlants:
               type: array
               items:
-                $ref: '../schemas/plant.yaml#/components/schemas/Plant'
+                $ref: "../schemas/plant.yaml#/components/schemas/Plant"
             currentSensorData:
               allOf:
-                - $ref: '../../common/schemas.yaml#/components/schemas/SensorData'
+                - $ref: "../../common/schemas.yaml#/components/schemas/SensorData"
                 - type: object
                   properties:
                     waterReservoirLevel:
@@ -57,7 +57,7 @@ components:
           type: string
           description: Friendly name for the controller
         location:
-          $ref: '../../common/schemas.yaml#/components/schemas/Location'
+          $ref: "../../common/schemas.yaml#/components/schemas/Location"
 
     ControllerUpdateRequest:
       type: object
@@ -65,7 +65,7 @@ components:
         name:
           type: string
         location:
-          $ref: '../../common/schemas.yaml#/components/schemas/Location'
+          $ref: "../../common/schemas.yaml#/components/schemas/Location"
 
     ControllerStatusUpdate:
       type: object
@@ -74,7 +74,7 @@ components:
           type: string
           enum: [online, offline, error]
         sensorData:
-          $ref: '../../common/schemas.yaml#/components/schemas/SensorData'
+          $ref: "../../common/schemas.yaml#/components/schemas/SensorData"
         waterReservoirLevel:
           type: number
           minimum: 0

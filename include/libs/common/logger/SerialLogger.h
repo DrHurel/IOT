@@ -4,11 +4,12 @@
 
 namespace common::logger
 {
-    class SerialLogger :  public Logger
+    class SerialLogger : public Logger
     {
 
     public:
         SerialLogger();
+
     protected:
         void log(LogLevel level, const char *message) override;
     };

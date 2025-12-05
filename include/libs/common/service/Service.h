@@ -23,10 +23,10 @@ namespace common::service
         bool owned_{false};
 
     public:
-        explicit ServiceInstance(std::unique_ptr<ServiceType> instance) noexcept 
+        explicit ServiceInstance(std::unique_ptr<ServiceType> instance) noexcept
             : instance_{std::move(instance)}, owned_{true} {}
 
-        explicit ServiceInstance(ServiceType* instance) noexcept 
+        explicit ServiceInstance(ServiceType *instance) noexcept
             : instance_{instance}, owned_{false} {}
 
         ~ServiceInstance() override
