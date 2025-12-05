@@ -7,9 +7,9 @@ namespace common::utils
     private:
         /* data */
     public:
-        Event(/* args */);
-        ~Event();
+        Event(/* args */) = default;
+        virtual ~Event() = default;
 
-        virtual void exec();
+        virtual void exec() const = 0;
     };
 }

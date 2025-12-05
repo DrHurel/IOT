@@ -23,10 +23,10 @@ namespace plant_nanny::services::ota
         Manager &operator=(const Manager &) = delete;
         Manager(Manager &&) = delete;
         Manager &operator=(Manager &&) = delete;
-        
+
         common::patterns::Result<void> start_update();
         bool is_updating() const;
-        common::patterns::Result<void> write_chunk(const uint8_t* data, size_t length);
+        common::patterns::Result<void> write_chunk(const uint8_t *data, size_t length);
         common::patterns::Result<size_t> get_bytes_written() const;
         common::patterns::Result<void> finalize_update();
         common::patterns::Result<void> abort_update();

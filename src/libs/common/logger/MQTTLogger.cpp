@@ -28,6 +28,5 @@ namespace common::logger
         std::string formattedMessage = "[" + std::string(levelStr) + "] " + std::string(message);
 
         _mqtt_client->publish("logs/topic", formattedMessage.c_str());
-
     }
 }

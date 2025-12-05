@@ -6,7 +6,7 @@
 
 namespace common::logger
 {
-    SerialLogger::SerialLogger(){}
+    SerialLogger::SerialLogger() {}
 
     void SerialLogger::log(LogLevel level, const char *message)
     {

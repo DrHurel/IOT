@@ -13,7 +13,7 @@ namespace plant_nanny::services::ota
         static const common::patterns::Result<std::string> get_name();
 
     private:
-        static const esp_app_desc_t* get_description();
+        static const esp_app_desc_t *get_description();
     };
 
 } // namespace plant_nanny::services::ota

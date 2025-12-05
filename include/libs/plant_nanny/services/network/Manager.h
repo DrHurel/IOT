@@ -31,7 +31,7 @@ namespace plant_nanny::services::network
         Manager(Manager &&) = delete;
         Manager &operator=(Manager &&) = delete;
 
-        void set_credentials(const std::string& ssid, const std::string& password) override;
+        void set_credentials(const std::string &ssid, const std::string &password) override;
         common::patterns::Result<void> connect() override;
         void disconnect() override;
         bool is_connected() const override;
@@ -39,10 +39,9 @@ namespace plant_nanny::services::network
         common::patterns::Result<std::string> get_ip_address() const override;
         common::patterns::Result<int> get_rssi() const override;
         common::patterns::Result<void> download_file(
-            const std::string& url,
-            std::function<bool(const uint8_t*, size_t)> chunk_handler,
-            std::function<void(size_t, size_t)> progress_callback = nullptr
-        ) override;
+            const std::string &url,
+            std::function<bool(const uint8_t *, size_t)> chunk_handler,
+            std::function<void(size_t, size_t)> progress_callback = nullptr) override;
     };
 
 } // namespace plant_nanny::services::network

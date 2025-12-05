@@ -165,4 +165,18 @@ namespace plant_nanny
 
         return result;
     }
+
+    void App::on(std::string_view const &name, common::utils::Event const &event)
+    {
+        _events[name] = event;
+    }
+
+    void App::emit(const std::string_view &event) const
+    {
+        auto it = _events.find(event);
+        if (it != _events.end())
+        {
+            it->second.exec();
+        }
+    }
 }

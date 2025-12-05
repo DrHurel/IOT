@@ -9,7 +9,7 @@ namespace plant_nanny::services::ota
     class OTAState
     {
     private:
-        const esp_partition_t* update_partition_;
+        const esp_partition_t *update_partition_;
         esp_ota_handle_t update_handle_;
         bool is_updating_;
         size_t bytes_written_;
@@ -20,11 +20,11 @@ namespace plant_nanny::services::ota
         // State queries
         bool is_updating() const;
         size_t bytes_written() const;
-        const esp_partition_t* partition() const;
+        const esp_partition_t *partition() const;
         esp_ota_handle_t handle() const;
 
         // State transitions
-        void begin_update(const esp_partition_t* partition, esp_ota_handle_t handle);
+        void begin_update(const esp_partition_t *partition, esp_ota_handle_t handle);
         void add_bytes(size_t bytes);
         void reset();
 
