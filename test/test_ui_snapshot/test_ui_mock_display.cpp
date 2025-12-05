@@ -1,4 +1,4 @@
-#include "test_ui_helpers.h"
+#include "testing/ui/helpers.h"
 
 // ============================================================================
 // Mock Display Tests

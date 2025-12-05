@@ -1,5 +1,5 @@
 #include <unity.h>
-#include "test_ui_helpers.h"
+#include "testing/ui/helpers.h"
 #include "libs/common/ui/Builders.h"
 #include "libs/common/ui/components/Text.h"
 

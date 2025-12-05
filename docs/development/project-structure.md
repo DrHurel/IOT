@@ -270,7 +270,7 @@ Python dependencies for build tools:
 ### Tests
 - Prefix with `test_`: `test_network.cpp`
 - Group by feature: `test_ui_snapshot/`
-- Keep test helpers nearby: `test_network_helpers.h`
+- Test helpers are in `include/testing/`: `include/testing/network/helpers.h`
 
 ### Documentation
 - **kebab-case**: `getting-started.md`

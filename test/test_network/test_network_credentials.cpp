@@ -1,4 +1,4 @@
-#include "test_network_helpers.h"
+#include "testing/network/helpers.h"
 
 // ============================================================================
 // Credentials Management Tests

@@ -1,5 +1,5 @@
 #include <unity.h>
-#include "test_network_helpers.h"
+#include "testing/network/helpers.h"
 
 // Global test state definition
 std::unique_ptr<MockNetworkService> mock_network = nullptr;

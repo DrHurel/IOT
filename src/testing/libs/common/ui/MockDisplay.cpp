@@ -1,4 +1,4 @@
-#include "MockDisplay.h"
+#include "testing/libs/common/ui/MockDisplay.h"
 #include <sstream>
 #include <fstream>
 #include <iomanip>
@@ -6,7 +6,7 @@
 #include <cmath>
 
 #define STB_IMAGE_WRITE_IMPLEMENTATION
-#include "../../external/stb_image_write.h"
+#include "testing/libs/external/stb_image_write.h"
 
 namespace testing::mocks
 {
