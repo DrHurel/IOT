@@ -4,10 +4,12 @@
 
 auto app = plant_nanny::App();
 
-void setup() {
-    app.initialize();
+void setup()
+{
+  app.initialize();
 }
 
-void loop() {
+void loop()
+{
   app.run();
 }

@@ -1,0 +1,6 @@
+# Ignore actual snapshot files generated during failed tests
+*.snapshot.actual
+*.png.actual
+
+# Keep the reference PNG snapshots in git
+!*.png

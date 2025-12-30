@@ -5,9 +5,9 @@ components:
       description: Configuration thresholds and settings for a plant
       properties:
         optimalTemperature:
-          $ref: '../../common/schemas.yaml#/components/schemas/TemperatureRange'
+          $ref: "../../common/schemas.yaml#/components/schemas/TemperatureRange"
         optimalHumidity:
-          $ref: '../../common/schemas.yaml#/components/schemas/HumidityRange'
+          $ref: "../../common/schemas.yaml#/components/schemas/HumidityRange"
         wateringCycle:
           type: integer
           description: Time between two watering cycles in hours
@@ -37,9 +37,9 @@ components:
           type: string
           description: Associated controller ID
         location:
-          $ref: '../../common/schemas.yaml#/components/schemas/Location'
+          $ref: "../../common/schemas.yaml#/components/schemas/Location"
         configuration:
-          $ref: '#/components/schemas/PlantConfiguration'
+          $ref: "#/components/schemas/PlantConfiguration"
         status:
           type: string
           enum: [active, inactive, maintenance]
@@ -52,12 +52,12 @@ components:
 
     PlantDetail:
       allOf:
-        - $ref: '#/components/schemas/Plant'
+        - $ref: "#/components/schemas/Plant"
         - type: object
           properties:
             currentMeasurements:
               allOf:
-                - $ref: '../../common/schemas.yaml#/components/schemas/SensorData'
+                - $ref: "../../common/schemas.yaml#/components/schemas/SensorData"
             lastWatering:
               type: string
               format: date-time
@@ -79,9 +79,9 @@ components:
         controllerId:
           type: string
         location:
-          $ref: '../../common/schemas.yaml#/components/schemas/Location'
+          $ref: "../../common/schemas.yaml#/components/schemas/Location"
         configuration:
-          $ref: '#/components/schemas/PlantConfiguration'
+          $ref: "#/components/schemas/PlantConfiguration"
 
     PlantUpdateRequest:
       type: object
@@ -91,9 +91,9 @@ components:
         species:
           type: string
         location:
-          $ref: '../../common/schemas.yaml#/components/schemas/Location'
+          $ref: "../../common/schemas.yaml#/components/schemas/Location"
         configuration:
-          $ref: '#/components/schemas/PlantConfiguration'
+          $ref: "#/components/schemas/PlantConfiguration"
         status:
           type: string
           enum: [active, inactive, maintenance]
@@ -112,6 +112,6 @@ components:
           items:
             type: string
         defaultConfiguration:
-          $ref: '#/components/schemas/PlantConfiguration'
+          $ref: "#/components/schemas/PlantConfiguration"
         description:
           type: string

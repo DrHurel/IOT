@@ -19,9 +19,15 @@ namespace common::service
     class ServiceInstance final : public Service
     {
     private:
-        /* data */
+        std::unique_ptr<ServiceType> instance_;
+        bool owned_{false};
+
     public:
-        ServiceInstance(std::unique_ptr<ServiceType> instance) noexcept : instance_{std::move(instance)}, owned_{true} {};
+        explicit ServiceInstance(std::unique_ptr<ServiceType> instance) noexcept
+            : instance_{std::move(instance)}, owned_{true} {}
+
+        explicit ServiceInstance(ServiceType *instance) noexcept
+            : instance_{instance}, owned_{false} {}
 
         ~ServiceInstance() override
         {
@@ -29,12 +35,8 @@ namespace common::service
             {
                 instance_.release();
             }
-        };
+        }
 
         ServiceType *get_instance() const { return instance_.get(); }
-
-    private:
-        std::unique_ptr<ServiceType> instance_;
-        bool owned_{false};
     };
 }
