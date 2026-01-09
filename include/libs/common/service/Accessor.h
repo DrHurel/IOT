@@ -12,11 +12,19 @@ namespace common::service
 
     private:
         ServiceType *service_{nullptr};
+        bool initialized_{false};
+        
+        void lazy_init() {
+            if (!initialized_ && common::service::DefaultRegistry::has_been_created()) {
+                service_ = common::service::DefaultRegistry::instance().get<ServiceType>();
+                initialized_ = true;
+            }
+        }
 
     public:
-        Accessor() noexcept : service_{common::service::DefaultRegistry::instance().get<ServiceType>()} {}
+        Accessor() noexcept = default;
 
-        explicit Accessor(common::service::Registry &registry) noexcept : service_{registry.get<ServiceType>()} {}
+        explicit Accessor(common::service::Registry &registry) noexcept : service_{registry.get<ServiceType>()}, initialized_{true} {}
 
         ~Accessor() noexcept = default;
         Accessor(Accessor const &) noexcept = delete;
@@ -24,20 +32,26 @@ namespace common::service
         Accessor &operator=(Accessor const &) noexcept = delete;
         Accessor &operator=(Accessor &&) noexcept = default;
 
-        bool is_available() const { return service_ != nullptr; }
+        bool is_available() { 
+            lazy_init();
+            return service_ != nullptr; 
+        }
 
-        ServiceType *operator->() const
+        ServiceType *operator->()
         {
+            lazy_init();
             return service_;
         }
 
-        operator ServiceType &() const
+        operator ServiceType &()
         {
+            lazy_init();
             return *service_;
         }
 
-        ServiceType &get() const
+        ServiceType &get()
         {
+            lazy_init();
             return *service_;
         }
     };
