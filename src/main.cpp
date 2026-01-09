@@ -1,15 +1,14 @@
 #include <Arduino.h>
-
 #include "libs/plant_nanny/App.h"
 
-auto app = plant_nanny::App();
+plant_nanny::App app;
 
 void setup()
 {
-  app.initialize();
+    app.initialize();
 }
 
 void loop()
 {
-  app.run();
+    app.run();
 }
