@@ -1,0 +1,3 @@
+[submodule "PlantNanny"]
+	path = PlantNanny
+	url = git@github.com:alderaan11/PlantNanny.git
