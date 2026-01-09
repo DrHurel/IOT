@@ -61,6 +61,63 @@ namespace plant_nanny::services::config
          * @brief Mark device as configured
          */
         common::patterns::Result<void> setConfigured(bool configured);
+
+        // ==================== MQTT Configuration ====================
+
+        /**
+         * @brief Save MQTT broker configuration
+         * @param host Broker hostname or IP address
+         * @param port Broker port (default 1883)
+         */
+        common::patterns::Result<void> saveMqttConfig(const std::string& host, uint16_t port = 1883);
+
+        /**
+         * @brief Save MQTT credentials
+         * @param username MQTT username
+         * @param password MQTT password
+         */
+        common::patterns::Result<void> saveMqttCredentials(const std::string& username, const std::string& password);
+
+        /**
+         * @brief Get saved MQTT broker host
+         */
+        common::patterns::Result<std::string> getMqttHost();
+
+        /**
+         * @brief Get saved MQTT broker port
+         */
+        uint16_t getMqttPort();
+
+        /**
+         * @brief Get saved MQTT username
+         */
+        common::patterns::Result<std::string> getMqttUsername();
+
+        /**
+         * @brief Get saved MQTT password
+         */
+        common::patterns::Result<std::string> getMqttPassword();
+
+        /**
+         * @brief Check if MQTT is configured
+         */
+        bool isMqttConfigured();
+
+        /**
+         * @brief Get the device ID (unique identifier for this device)
+         */
+        std::string getDeviceId();
+
+        /**
+         * @brief Set the device ID
+         */
+        common::patterns::Result<void> setDeviceId(const std::string& deviceId);
+
+        /**
+         * @brief Get or generate a unique device ID
+         * If no device ID is stored, generates one based on MAC address
+         */
+        std::string getOrCreateDeviceId();
     };
 
 } // namespace plant_nanny::services::config
