@@ -74,7 +74,7 @@ For contributors and advanced users:
 
 ### For API Users
 - [API Overview](/api/overview) - API introduction
-- [OpenAPI Specs](https://github.com/DrHurel/IOT/tree/main/RestApi) - Full API definitions
+- [OpenAPI Specs](https://github.com/DrHurel/IOT/tree/main/PlantNanny/api) - Full API definitions
 - [Authentication](/api/authentication) - Get authenticated
 
 ## 🛠 Technology Stack

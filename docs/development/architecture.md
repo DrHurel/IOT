@@ -211,19 +211,6 @@ test/
 └── snapshots/                 # UI snapshot tests
 ```
 
-### API Structure
-
-```
-RestApi/
-├── controller.yaml           # Controller API spec
-├── server.yaml              # Server API spec
-└── common/                  # Shared schemas
-    ├── parameters.yaml
-    ├── responses.yaml
-    ├── schemas.yaml
-    └── security.yaml
-```
-
 ## Development Workflow
 
 ### 1. Local Development

@@ -305,4 +305,4 @@ ws://<controller-ip>/ws
 
 ---
 
-*Full documentation coming soon. See [OpenAPI Specification](https://github.com/DrHurel/IOT/blob/main/RestApi/controller.yaml) for complete details.*
+*See [OpenAPI Specification](https://github.com/DrHurel/IOT/blob/main/PlantNanny/api/plant_nanny_api.yaml) for complete details.*

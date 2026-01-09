@@ -57,7 +57,6 @@ IOT/
 ├── test/                   # Unit tests
 ├── docs/                   # VitePress documentation
 ├── Devtools/               # Build and development scripts
-├── RestApi/                # OpenAPI specifications
 └── platformio.ini          # PlatformIO configuration
 ```
 

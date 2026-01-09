@@ -11,7 +11,6 @@ IOT/
 ├── docker/                # Docker configurations
 ├── include/               # C++ header files
 ├── lib/                   # Local libraries
-├── RestApi/               # OpenAPI specifications
 ├── src/                   # Source code
 ├── test/                  # Test files
 ├── archi.puml            # Architecture diagram (PlantUML)
@@ -174,21 +173,6 @@ Devtools/
 
 # Generate new class from template
 ./Devtools/generate.sh
-```
-
-## API Specifications (`RestApi/`)
-
-OpenAPI 3.0 specifications for RESTful APIs:
-
-```
-RestApi/
-├── controller.yaml           # Controller API
-├── server.yaml              # Server API
-└── common/                  # Shared definitions
-    ├── parameters.yaml
-    ├── responses.yaml
-    ├── schemas.yaml        # Data models
-    └── security.yaml       # Auth schemes
 ```
 
 ## Documentation (`docs/`)

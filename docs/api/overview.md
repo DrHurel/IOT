@@ -62,8 +62,7 @@ Response:
 
 Full API specifications are available in OpenAPI 3.0 format:
 
-- **Controller API**: [`RestApi/controller.yaml`](https://github.com/DrHurel/IOT/blob/main/RestApi/controller.yaml)
-- **Server API**: [`RestApi/server.yaml`](https://github.com/DrHurel/IOT/blob/main/RestApi/server.yaml)
+- **PlantNanny API**: [`PlantNanny/api/plant_nanny_api.yaml`](https://github.com/DrHurel/IOT/blob/main/PlantNanny/api/plant_nanny_api.yaml)
 
 ## Common Endpoints
 
@@ -320,7 +319,7 @@ curl https://api.plantnanny.io/api/v1/plants \
 Import the OpenAPI specifications:
 1. Open Postman
 2. Import → Link
-3. Enter: `https://raw.githubusercontent.com/DrHurel/IOT/main/RestApi/server.yaml`
+3. Enter: `https://raw.githubusercontent.com/DrHurel/IOT/main/PlantNanny/api/plant_nanny_api.yaml`
 
 ### Interactive Documentation (Planned)
 
@@ -334,4 +333,4 @@ https://api.plantnanny.io/docs
 - [Authentication Details](/api/authentication)
 - [Controller Endpoints](/api/controller)
 - [Server Endpoints](/api/server)
-- [OpenAPI Specifications](https://github.com/DrHurel/IOT/tree/main/RestApi)
+- [OpenAPI Specification](https://github.com/DrHurel/IOT/tree/main/PlantNanny/api)
