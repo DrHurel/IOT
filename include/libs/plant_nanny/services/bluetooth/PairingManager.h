@@ -15,12 +15,36 @@ namespace plant_nanny::services::bluetooth
         ADVERTISING,
         AWAITING_PIN,
         CONNECTED,
+        AWAITING_WIFI_CONFIG,
+        CONFIGURING_WIFI,
         PAIRED,
         FAILED
     };
 
+    /**
+     * @brief WiFi credentials received via BLE
+     */
+    struct WifiCredentials
+    {
+        std::string ssid;
+        std::string password;
+    };
+
+    /**
+     * @brief MQTT configuration received via BLE
+     */
+    struct MqttConfig
+    {
+        std::string host;
+        uint16_t port;
+        std::string username;
+        std::string password;
+    };
+
     using PinDisplayCallback = std::function<void(const std::string& pin)>;
     using PairingCompleteCallback = std::function<void(bool success)>;
+    using WifiConfigCallback = std::function<void(const WifiCredentials& creds)>;
+    using MqttConfigCallback = std::function<void(const MqttConfig& config)>;
 
     class PairingManager
     {
@@ -29,17 +53,35 @@ namespace plant_nanny::services::bluetooth
         std::string _currentPin;
         PinDisplayCallback _pinDisplayCallback;
         PairingCompleteCallback _pairingCompleteCallback;
+        WifiConfigCallback _wifiConfigCallback;
+        MqttConfigCallback _mqttConfigCallback;
         bool _initialized;
         unsigned long _pairingStartTime;
-        static constexpr unsigned long PAIRING_TIMEOUT_MS = 60000;  // 60 seconds timeout
+        static constexpr unsigned long PAIRING_TIMEOUT_MS = 120000;  // 120 seconds timeout
 
         /**
-         * @brief Generate a random 4-digit PIN
+         * @brief Generate a random 6-digit PIN
          */
         std::string generatePin();
 
+        /**
+         * @brief Setup BLE services and characteristics
+         */
+        void setupServices();
+
     public:
         static constexpr const char* DEVICE_NAME = "PlantNanny";
+        
+        // Service UUIDs
+        static constexpr const char* CONFIG_SERVICE_UUID = "12345678-1234-5678-1234-56789abcdef0";
+        static constexpr const char* WIFI_SSID_CHAR_UUID = "12345678-1234-5678-1234-56789abcdef1";
+        static constexpr const char* WIFI_PASS_CHAR_UUID = "12345678-1234-5678-1234-56789abcdef2";
+        static constexpr const char* MQTT_HOST_CHAR_UUID = "12345678-1234-5678-1234-56789abcdef3";
+        static constexpr const char* MQTT_PORT_CHAR_UUID = "12345678-1234-5678-1234-56789abcdef4";
+        static constexpr const char* CONFIG_STATUS_CHAR_UUID = "12345678-1234-5678-1234-56789abcdef5";
+        static constexpr const char* DEVICE_ID_CHAR_UUID = "12345678-1234-5678-1234-56789abcdef6";
+        static constexpr const char* IP_ADDRESS_CHAR_UUID = "12345678-1234-5678-1234-56789abcdef7";
+        static constexpr const char* SERVER_ID_CHAR_UUID = "12345678-1234-5678-1234-56789abcdef8";
 
         PairingManager();
         ~PairingManager();
@@ -96,9 +138,44 @@ namespace plant_nanny::services::bluetooth
         void setPairingCompleteCallback(PairingCompleteCallback callback) { _pairingCompleteCallback = callback; }
 
         /**
+         * @brief Set callback for WiFi configuration received
+         */
+        void setWifiConfigCallback(WifiConfigCallback callback) { _wifiConfigCallback = callback; }
+
+        /**
+         * @brief Set callback for MQTT configuration received
+         */
+        void setMqttConfigCallback(MqttConfigCallback callback) { _mqttConfigCallback = callback; }
+
+        /**
+         * @brief Notify that WiFi configuration was successful
+         */
+        void notifyWifiConfigured(bool success);
+
+        /**
+         * @brief Set the IP address to expose via BLE after WiFi connects
+         */
+        void setIpAddress(const std::string& ipAddress);
+
+        /**
+         * @brief Get the server ID received from the app
+         */
+        std::string getServerId() const;
+
+        /**
          * @brief Disconnect and unpair current device
          */
         common::patterns::Result<void> unpair();
+
+        /**
+         * @brief Called when WiFi credentials are received via BLE
+         */
+        void onWifiCredentialsReceived(const std::string& ssid, const std::string& password);
+
+        /**
+         * @brief Called when MQTT config is received via BLE
+         */
+        void onMqttConfigReceived(const std::string& host, uint16_t port);
     };
 
 } // namespace plant_nanny::services::bluetooth
