@@ -11,6 +11,8 @@
 #include "libs/plant_nanny/services/button/ButtonHandler.h"
 #include "libs/plant_nanny/services/bluetooth/PairingManager.h"
 #include "libs/plant_nanny/services/config/ConfigManager.h"
+#include "libs/plant_nanny/services/mqtt/MQTTService.h"
+#include "libs/plant_nanny/services/network/Manager.h"
 
 // UI (SRP - separated from App)
 #include "libs/plant_nanny/ui/ScreenManager.h"
@@ -60,6 +62,8 @@ namespace plant_nanny
         services::button::ButtonHandler _buttonHandler;
         services::bluetooth::PairingManager _pairingManager;
         services::config::ConfigManager _configManager;
+        services::network::Manager _networkManager;
+        services::mqtt::MQTTService _mqttService;
         std::unique_ptr<PubSubClient> _mqtt_client;
         
         // UI management (SRP - separated)
@@ -77,6 +81,8 @@ namespace plant_nanny
         void setupScreens();
         void setupStates();
         void setupServices();
+        void setupNetwork();
+        void setupMqtt();
 
     public:
         App();
@@ -105,6 +111,9 @@ namespace plant_nanny
         // Network management
         void configure_wifi(const std::string &ssid, const std::string &password);
         bool is_network_connected() const;
+
+        // MQTT management
+        services::mqtt::MQTTService& mqttService() { return _mqttService; }
 
         // OTA management
         common::patterns::Result<void> perform_ota_update(const std::string &firmware_url);
