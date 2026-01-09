@@ -4,6 +4,7 @@
 #include <string>
 #include <cstdint>
 #include "TFT_eSPI.h"
+#include "libs/common/ui/core.h"
 
 namespace testing::mocks
 {

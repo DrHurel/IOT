@@ -47,7 +47,7 @@ namespace common::ui::components
 
         // Set text properties
         display.setTextSize(_fontSize);
-        display.setTextColor(_foregroundColor, _backgroundColor);
+        display.setTextColor(static_cast<uint16_t>(_foregroundColor), static_cast<uint16_t>(_backgroundColor));
 
         // Calculate text position based on alignment
         int textX = _x;
@@ -93,7 +93,7 @@ namespace common::ui::components
         {
             int charHeight = 8 * _fontSize;
             int underlineY = textY + charHeight;
-            display.drawLine(textX, underlineY, textX + _width, underlineY, _foregroundColor);
+            display.drawLine(textX, underlineY, textX + _width, underlineY, static_cast<uint32_t>(_foregroundColor));
         }
 
         return common::patterns::Result<void>::success();
