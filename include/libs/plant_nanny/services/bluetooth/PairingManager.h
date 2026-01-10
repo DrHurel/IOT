@@ -45,6 +45,7 @@ namespace plant_nanny::services::bluetooth
     using PairingCompleteCallback = std::function<void(bool success)>;
     using WifiConfigCallback = std::function<void(const WifiCredentials& creds)>;
     using MqttConfigCallback = std::function<void(const MqttConfig& config)>;
+    using StateChangeCallback = std::function<void(PairingState newState)>;
 
     class PairingManager
     {
@@ -55,6 +56,7 @@ namespace plant_nanny::services::bluetooth
         PairingCompleteCallback _pairingCompleteCallback;
         WifiConfigCallback _wifiConfigCallback;
         MqttConfigCallback _mqttConfigCallback;
+        StateChangeCallback _stateChangeCallback;
         bool _initialized;
         unsigned long _pairingStartTime;
         static constexpr unsigned long PAIRING_TIMEOUT_MS = 120000;  // 120 seconds timeout
@@ -82,6 +84,8 @@ namespace plant_nanny::services::bluetooth
         static constexpr const char* DEVICE_ID_CHAR_UUID = "12345678-1234-5678-1234-56789abcdef6";
         static constexpr const char* IP_ADDRESS_CHAR_UUID = "12345678-1234-5678-1234-56789abcdef7";
         static constexpr const char* SERVER_ID_CHAR_UUID = "12345678-1234-5678-1234-56789abcdef8";
+        static constexpr const char* WIFI_NETWORKS_CHAR_UUID = "12345678-1234-5678-1234-56789abcdef9";
+        static constexpr const char* PIN_CHAR_UUID = "12345678-1234-5678-1234-56789abcdefa";
 
         PairingManager();
         ~PairingManager();
@@ -118,9 +122,27 @@ namespace plant_nanny::services::bluetooth
         PairingState getState() const { return _state; }
 
         /**
+         * @brief Set pairing state and notify callback
+         */
+        void setState(PairingState state) 
+        { 
+            _state = state; 
+            if (_stateChangeCallback)
+            {
+                _stateChangeCallback(state);
+            }
+        }
+
+        /**
          * @brief Get current PIN (only valid during pairing)
          */
         const std::string& getCurrentPin() const { return _currentPin; }
+
+        /**
+         * @brief Verify PIN entered by user
+         * @return true if PIN matches, false otherwise
+         */
+        bool verifyPin(const std::string& pin) const { return pin == _currentPin; }
 
         /**
          * @brief Check if a device is currently paired
@@ -148,6 +170,16 @@ namespace plant_nanny::services::bluetooth
         void setMqttConfigCallback(MqttConfigCallback callback) { _mqttConfigCallback = callback; }
 
         /**
+         * @brief Set callback for state changes
+         */
+        void setStateChangeCallback(StateChangeCallback callback) { _stateChangeCallback = callback; }
+
+        /**
+         * @brief Handle WiFi credentials received via BLE
+         */
+        void handleWifiCredentials(const std::string& ssid, const std::string& password);
+
+        /**
          * @brief Notify that WiFi configuration was successful
          */
         void notifyWifiConfigured(bool success);
@@ -161,6 +193,11 @@ namespace plant_nanny::services::bluetooth
          * @brief Get the server ID received from the app
          */
         std::string getServerId() const;
+
+        /**
+         * @brief Scan for available WiFi networks and update BLE characteristic
+         */
+        void scanWifiNetworks();
 
         /**
          * @brief Disconnect and unpair current device

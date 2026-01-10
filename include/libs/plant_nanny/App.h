@@ -21,6 +21,8 @@
 #include "libs/plant_nanny/ui/screens/PairingScreen.h"
 #include "libs/plant_nanny/ui/screens/SuccessScreen.h"
 #include "libs/plant_nanny/ui/screens/ResetScreen.h"
+#include "libs/plant_nanny/ui/screens/WifiConfigScreen.h"
+#include "libs/plant_nanny/ui/screens/ConfigCompleteScreen.h"
 
 // State machine (OCP - new states without modifying App)
 #include "libs/plant_nanny/states/AppContext.h"

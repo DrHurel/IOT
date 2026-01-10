@@ -4,6 +4,8 @@
 #include <libs/common/logger/SerialLogger.h>
 #include <libs/common/service/Accessor.h>
 #include <libs/common/ui/UI.h>
+#include "libs/plant_nanny/ui/screens/AlreadyPairedScreen.h"
+#include "libs/plant_nanny/ui/screens/WifiErrorScreen.h"
 
 // States
 #include "libs/plant_nanny/states/NormalState.h"
@@ -62,6 +64,10 @@ namespace plant_nanny
         _screenManager.registerScreen("pairing", _pairingScreen);
         _screenManager.registerScreen("success", std::make_shared<ui::screens::SuccessScreen>());
         _screenManager.registerScreen("reset", std::make_shared<ui::screens::ResetScreen>());
+        _screenManager.registerScreen("wifi_config", std::make_shared<ui::screens::WifiConfigScreen>());
+        _screenManager.registerScreen("config_complete", std::make_shared<ui::screens::ConfigCompleteScreen>());
+        _screenManager.registerScreen("already_paired", std::make_shared<ui::screens::AlreadyPairedScreen>());
+        _screenManager.registerScreen("wifi_error", std::make_shared<ui::screens::WifiErrorScreen>());
     }
 
     void App::setupStates()
@@ -81,6 +87,25 @@ namespace plant_nanny
         
         _configManager.initialize();
         _pairingManager.initialize();
+        
+        // Setup BLE state change callback for screen transitions
+        _pairingManager.setStateChangeCallback([this](services::bluetooth::PairingState newState) {
+            switch (newState)
+            {
+                case services::bluetooth::PairingState::AWAITING_WIFI_CONFIG:
+                    log_info("[APP] PIN verified, showing WiFi config screen");
+                    _screenManager.navigateTo("wifi_config");
+                    _screenManager.render();
+                    break;
+                case services::bluetooth::PairingState::PAIRED:
+                    log_info("[APP] Configuration complete!");
+                    _screenManager.navigateTo("config_complete");
+                    _screenManager.render();
+                    break;
+                default:
+                    break;
+            }
+        });
         
         // Setup BLE WiFi configuration callback
         _pairingManager.setWifiConfigCallback([this](const services::bluetooth::WifiCredentials& creds) {
@@ -110,6 +135,17 @@ namespace plant_nanny
                 
                 // Setup MQTT after successful WiFi connection
                 setupMqtt();
+                
+                // State is already set to PAIRED in notifyWifiConfigured
+            }
+            else
+            {
+                log_info("[APP] WiFi connection failed - showing error screen");
+                _screenManager.navigateTo("wifi_error");
+                _screenManager.render();
+                
+                // Set state back to awaiting config so user can try again
+                _pairingManager.setState(services::bluetooth::PairingState::AWAITING_WIFI_CONFIG);
             }
         });
         

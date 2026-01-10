@@ -28,6 +28,7 @@ namespace plant_nanny::states
     private:
         bool _pairingComplete = false;
         bool _pairingSuccess = false;
+        bool _alreadyPaired = false;
 
     public:
         static constexpr const char* ID = "pairing";
@@ -38,6 +39,16 @@ namespace plant_nanny::states
         {
             _pairingComplete = false;
             _pairingSuccess = false;
+            _alreadyPaired = false;
+            
+            // Check if device is already configured - require factory reset to re-pair
+            if (context.configManager().isConfigured())
+            {
+                log_pairing("[STATE] Device already paired - showing reset required screen");
+                context.screenManager().navigateTo("already_paired");
+                _alreadyPaired = true;
+                return;
+            }
             
             auto result = context.pairingManager().startPairing();
             if (result.succeed())
@@ -74,6 +85,14 @@ namespace plant_nanny::states
 
         void update(AppContext& context) override
         {
+            // If device was already paired, show error screen briefly then return to normal
+            if (_alreadyPaired)
+            {
+                delay(3000);  // Let user read the error message
+                context.requestTransition("normal");
+                return;
+            }
+            
             context.pairingManager().update();
             
             if (_pairingComplete)

@@ -74,6 +74,12 @@ namespace plant_nanny::services::network
 
     void Manager::maintain_connection()
     {
+        // Don't try to maintain connection if credentials aren't set
+        if (ssid_.empty())
+        {
+            return;
+        }
+
         uint32_t current_time = millis();
 
         if (!is_connected() &&
