@@ -7,9 +7,12 @@
 
 namespace plant_nanny::services::bluetooth
 {
-    // Forward declarations of static variables (defined later but used in callbacks)
     static NimBLECharacteristic* pConfigStatusChar = nullptr;
     static NimBLECharacteristic* pWifiSsidChar = nullptr;
+    static NimBLECharacteristic* pMqttHostChar = nullptr;
+    static NimBLECharacteristic* pMqttPortChar = nullptr;
+    static NimBLECharacteristic* pMqttUsernameChar = nullptr;
+    static NimBLECharacteristic* pMqttPasswordChar = nullptr;
 
     namespace
     {
@@ -22,7 +25,6 @@ namespace plant_nanny::services::bluetooth
             }
         }
 
-        // Global pointer for callbacks to access the manager
         PairingManager* g_pairingManager = nullptr;
     }
 
@@ -42,7 +44,6 @@ namespace plant_nanny::services::bluetooth
                 (uuid == PairingManager::PIN_CHAR_UUID) ? "***" : value.c_str());
             log_info(msg);
 
-            // Handle PIN verification
             if (uuid == PairingManager::PIN_CHAR_UUID)
             {
                 if (g_pairingManager->getState() == PairingState::AWAITING_PIN)
@@ -69,19 +70,35 @@ namespace plant_nanny::services::bluetooth
                     }
                 }
             }
-            // Handle WiFi password write - this triggers WiFi configuration
             else if (uuid == PairingManager::WIFI_PASS_CHAR_UUID)
             {
                 if (g_pairingManager->getState() == PairingState::AWAITING_WIFI_CONFIG)
                 {
-                    // Get SSID and password
                     std::string ssid = pWifiSsidChar ? pWifiSsidChar->getValue() : "";
                     std::string pass = value;
                     
                     if (!ssid.empty() && !pass.empty())
                     {
                         log_info("[BLE] WiFi credentials received via write callback");
+
+                        std::string mqttHost = pMqttHostChar ? pMqttHostChar->getValue() : "";
+                        std::string mqttPortStr = pMqttPortChar ? pMqttPortChar->getValue() : "1883";
+                        std::string mqttUsername = pMqttUsernameChar ? pMqttUsernameChar->getValue() : "";
+                        std::string mqttPassword = pMqttPasswordChar ? pMqttPasswordChar->getValue() : "";
+                        uint16_t mqttPort = static_cast<uint16_t>(atoi(mqttPortStr.c_str()));
+                        if (mqttPort == 0) mqttPort = 1883;
+                        
+                        if (!mqttHost.empty())
+                        {
+                            char mqttMsg[128];
+                            snprintf(mqttMsg, sizeof(mqttMsg), "[BLE] MQTT config: %s:%d user=%s", 
+                                mqttHost.c_str(), mqttPort, mqttUsername.c_str());
+                            log_info(mqttMsg);
+                            g_pairingManager->onMqttConfigReceived(mqttHost, mqttPort, mqttUsername, mqttPassword);
+                        }
+                        
                         g_pairingManager->handleWifiCredentials(ssid, pass);
+                        if (pMqttPasswordChar) pMqttPasswordChar->setValue("");
                     }
                     else
                     {
@@ -106,8 +123,6 @@ namespace plant_nanny::services::bluetooth
         void onConnect(NimBLEServer* pServer, NimBLEConnInfo& connInfo) override
         {
             log_info("[BLE] Device connected");
-            
-            // Set state to awaiting PIN - user must enter PIN in the app
             if (g_pairingManager && g_pairingManager->getState() == PairingState::ADVERTISING)
             {
                 g_pairingManager->setState(PairingState::AWAITING_PIN);
@@ -122,28 +137,21 @@ namespace plant_nanny::services::bluetooth
         void onDisconnect(NimBLEServer* pServer, NimBLEConnInfo& connInfo, int reason) override
         {
             log_info("[BLE] Device disconnected");
-            // Only restart advertising if pairing/config not complete
             if (g_pairingManager)
             {
                 auto state = g_pairingManager->getState();
                 if (state != PairingState::PAIRED && state != PairingState::IDLE)
                 {
-                    // Go back to advertising if connection dropped during setup
                     g_pairingManager->setState(PairingState::ADVERTISING);
                     pServer->startAdvertising();
                 }
             }
         }
 
-        // Not using OS-level PIN anymore, but keep the callback for compatibility
-        uint32_t onPassKeyDisplay() override
-        {
-            return 0;
-        }
+        uint32_t onPassKeyDisplay() override { return 0; }
 
         void onAuthenticationComplete(NimBLEConnInfo& connInfo) override
         {
-            // Not using OS-level authentication, PIN is verified via app
             log_info("[BLE] Authentication complete (app-level PIN used)");
         }
     };
@@ -151,11 +159,7 @@ namespace plant_nanny::services::bluetooth
     static NimBLEServer* pServer = nullptr;
     static PairingServerCallbacks* pServerCallbacks = nullptr;
     static ConfigCharacteristicCallbacks* pCharCallbacks = nullptr;
-    // pWifiSsidChar is forward declared at the top
     static NimBLECharacteristic* pWifiPassChar = nullptr;
-    static NimBLECharacteristic* pMqttHostChar = nullptr;
-    static NimBLECharacteristic* pMqttPortChar = nullptr;
-    // pConfigStatusChar is forward declared at the top
     static NimBLECharacteristic* pDeviceIdChar = nullptr;
     static NimBLECharacteristic* pIpAddressChar = nullptr;
     static NimBLECharacteristic* pServerIdChar = nullptr;
@@ -206,10 +210,8 @@ namespace plant_nanny::services::bluetooth
 
     void PairingManager::setupServices()
     {
-        // Create Configuration Service
         NimBLEService* pConfigService = pServer->createService(CONFIG_SERVICE_UUID);
 
-        // WiFi SSID characteristic - writable
         pWifiSsidChar = pConfigService->createCharacteristic(
             WIFI_SSID_CHAR_UUID,
             NIMBLE_PROPERTY::READ | NIMBLE_PROPERTY::WRITE
@@ -217,14 +219,12 @@ namespace plant_nanny::services::bluetooth
         pWifiSsidChar->setCallbacks(pCharCallbacks);
         pWifiSsidChar->setValue("");
 
-        // WiFi Password characteristic - writable
         pWifiPassChar = pConfigService->createCharacteristic(
             WIFI_PASS_CHAR_UUID,
             NIMBLE_PROPERTY::WRITE
         );
         pWifiPassChar->setCallbacks(pCharCallbacks);
 
-        // MQTT Host characteristic - writable
         pMqttHostChar = pConfigService->createCharacteristic(
             MQTT_HOST_CHAR_UUID,
             NIMBLE_PROPERTY::READ | NIMBLE_PROPERTY::WRITE
@@ -232,7 +232,6 @@ namespace plant_nanny::services::bluetooth
         pMqttHostChar->setCallbacks(pCharCallbacks);
         pMqttHostChar->setValue("");
 
-        // MQTT Port characteristic - writable
         pMqttPortChar = pConfigService->createCharacteristic(
             MQTT_PORT_CHAR_UUID,
             NIMBLE_PROPERTY::READ | NIMBLE_PROPERTY::WRITE
@@ -240,28 +239,37 @@ namespace plant_nanny::services::bluetooth
         pMqttPortChar->setCallbacks(pCharCallbacks);
         pMqttPortChar->setValue("1883");
 
-        // Config Status characteristic - readable/notify
+        pMqttUsernameChar = pConfigService->createCharacteristic(
+            MQTT_USERNAME_CHAR_UUID,
+            NIMBLE_PROPERTY::READ | NIMBLE_PROPERTY::WRITE
+        );
+        pMqttUsernameChar->setCallbacks(pCharCallbacks);
+        pMqttUsernameChar->setValue("");
+
+        pMqttPasswordChar = pConfigService->createCharacteristic(
+            MQTT_PASSWORD_CHAR_UUID,
+            NIMBLE_PROPERTY::WRITE
+        );
+        pMqttPasswordChar->setCallbacks(pCharCallbacks);
+
         pConfigStatusChar = pConfigService->createCharacteristic(
             CONFIG_STATUS_CHAR_UUID,
             NIMBLE_PROPERTY::READ | NIMBLE_PROPERTY::NOTIFY
         );
         pConfigStatusChar->setValue("READY");
 
-        // Device ID characteristic - readable
         pDeviceIdChar = pConfigService->createCharacteristic(
             DEVICE_ID_CHAR_UUID,
             NIMBLE_PROPERTY::READ
         );
         pDeviceIdChar->setValue("plantnanny-device");
 
-        // IP Address characteristic - readable (set after WiFi connects)
         pIpAddressChar = pConfigService->createCharacteristic(
             IP_ADDRESS_CHAR_UUID,
             NIMBLE_PROPERTY::READ | NIMBLE_PROPERTY::NOTIFY
         );
         pIpAddressChar->setValue("");
 
-        // Server ID characteristic - writable (app sends server-assigned ID)
         pServerIdChar = pConfigService->createCharacteristic(
             SERVER_ID_CHAR_UUID,
             NIMBLE_PROPERTY::READ | NIMBLE_PROPERTY::WRITE
@@ -269,14 +277,12 @@ namespace plant_nanny::services::bluetooth
         pServerIdChar->setCallbacks(pCharCallbacks);
         pServerIdChar->setValue("");
 
-        // WiFi Networks characteristic - readable (JSON array of available networks)
         pWifiNetworksChar = pConfigService->createCharacteristic(
             WIFI_NETWORKS_CHAR_UUID,
             NIMBLE_PROPERTY::READ
         );
         pWifiNetworksChar->setValue("[]");
 
-        // PIN characteristic - writable (app sends PIN for verification)
         pPinChar = pConfigService->createCharacteristic(
             PIN_CHAR_UUID,
             NIMBLE_PROPERTY::WRITE
@@ -285,7 +291,6 @@ namespace plant_nanny::services::bluetooth
 
         pConfigService->start();
 
-        // Device Information Service
         NimBLEService* pDevInfoService = pServer->createService("180A");
         NimBLECharacteristic* pManufacturer = pDevInfoService->createCharacteristic(
             "2A29",
@@ -305,7 +310,6 @@ namespace plant_nanny::services::bluetooth
         }
 
         NimBLEDevice::init(DEVICE_NAME);
-        // No OS-level security required - PIN verification is done in app
         NimBLEDevice::setSecurityAuth(false, false, false);
         NimBLEDevice::setSecurityIOCap(BLE_HS_IO_NO_INPUT_OUTPUT);
 
@@ -400,7 +404,6 @@ namespace plant_nanny::services::bluetooth
             return;
         }
 
-        // Check for timeout
         if (_pairingStartTime > 0 && (millis() - _pairingStartTime) > PAIRING_TIMEOUT_MS)
         {
             log_info("[BLE] Pairing timeout");
@@ -424,8 +427,6 @@ namespace plant_nanny::services::bluetooth
                 {
                     _state = PairingState::AWAITING_WIFI_CONFIG;
                     log_info("[BLE] Waiting for WiFi configuration");
-                    
-                    // Scan for available WiFi networks
                     scanWifiNetworks();
                     
                     if (pConfigStatusChar)
@@ -435,7 +436,6 @@ namespace plant_nanny::services::bluetooth
                     }
                 }
 
-                // Check if WiFi credentials have been written
                 if (_state == PairingState::AWAITING_WIFI_CONFIG && pWifiSsidChar && pWifiPassChar)
                 {
                     std::string ssid = pWifiSsidChar->getValue();
@@ -448,6 +448,8 @@ namespace plant_nanny::services::bluetooth
                         
                         std::string mqttHost = pMqttHostChar ? pMqttHostChar->getValue() : "";
                         std::string mqttPortStr = pMqttPortChar ? pMqttPortChar->getValue() : "1883";
+                        std::string mqttUsername = pMqttUsernameChar ? pMqttUsernameChar->getValue() : "";
+                        std::string mqttPassword = pMqttPasswordChar ? pMqttPasswordChar->getValue() : "";
                         uint16_t mqttPort = static_cast<uint16_t>(atoi(mqttPortStr.c_str()));
                         if (mqttPort == 0) mqttPort = 1883;
 
@@ -459,13 +461,13 @@ namespace plant_nanny::services::bluetooth
 
                         if (!mqttHost.empty() && _mqttConfigCallback)
                         {
-                            MqttConfig config{mqttHost, mqttPort, "", ""};
+                            MqttConfig config{mqttHost, mqttPort, mqttUsername, mqttPassword};
                             _mqttConfigCallback(config);
                         }
 
-                        // Clear for security
                         pWifiSsidChar->setValue("");
                         pWifiPassChar->setValue("");
+                        if (pMqttPasswordChar) pMqttPasswordChar->setValue("");
                     }
                 }
             }
@@ -485,13 +487,10 @@ namespace plant_nanny::services::bluetooth
                 pConfigStatusChar->setValue("WIFI_CONFIGURED");
                 setState(PairingState::PAIRED);
                 log_info("[BLE] WiFi configuration successful");
-                
-                // Only notify if client is still connected
                 if (pServer && pServer->getConnectedCount() > 0)
                 {
                     pConfigStatusChar->notify();
                 }
-                
                 if (_pairingCompleteCallback)
                 {
                     _pairingCompleteCallback(true);
@@ -501,8 +500,6 @@ namespace plant_nanny::services::bluetooth
             {
                 pConfigStatusChar->setValue("WIFI_FAILED");
                 log_info("[BLE] WiFi configuration failed");
-                
-                // Only notify if client is still connected
                 if (pServer && pServer->getConnectedCount() > 0)
                 {
                     pConfigStatusChar->notify();
@@ -532,11 +529,12 @@ namespace plant_nanny::services::bluetooth
         }
     }
 
-    void PairingManager::onMqttConfigReceived(const std::string& host, uint16_t port)
+    void PairingManager::onMqttConfigReceived(const std::string& host, uint16_t port,
+                                              const std::string& username, const std::string& password)
     {
         if (_mqttConfigCallback)
         {
-            MqttConfig config{host, port, "", ""};
+            MqttConfig config{host, port, username, password};
             _mqttConfigCallback(config);
         }
     }
@@ -563,8 +561,6 @@ namespace plant_nanny::services::bluetooth
         if (pIpAddressChar)
         {
             pIpAddressChar->setValue(ipAddress);
-            
-            // Only notify if client is still connected
             if (pServer && pServer->getConnectedCount() > 0)
             {
                 pIpAddressChar->notify();
@@ -588,8 +584,6 @@ namespace plant_nanny::services::bluetooth
     void PairingManager::scanWifiNetworks()
     {
         log_info("[BLE] Scanning for WiFi networks...");
-        
-        // Scan for networks
         int numNetworks = WiFi.scanNetworks(false, false, false, 300);
         
         if (numNetworks < 0)
@@ -606,23 +600,18 @@ namespace plant_nanny::services::bluetooth
         snprintf(msg, sizeof(msg), "[BLE] Found %d networks", numNetworks);
         log_info(msg);
 
-        // Build JSON array of networks (format: ["SSID1","SSID2",...])
-        // BLE characteristic has limited size, so we limit to ~10 networks
         std::string json = "[";
         int count = 0;
         const int maxNetworks = 10;
-        
+
         for (int i = 0; i < numNetworks && count < maxNetworks; i++)
         {
             String ssid = WiFi.SSID(i);
-            
-            // Skip empty or duplicate SSIDs
             if (ssid.length() == 0)
             {
                 continue;
             }
-            
-            // Check for duplicates (same SSID from different APs)
+
             bool duplicate = false;
             for (int j = 0; j < i; j++)
             {
@@ -638,8 +627,7 @@ namespace plant_nanny::services::bluetooth
             {
                 json += ",";
             }
-            
-            // Escape quotes in SSID
+
             json += "\"";
             for (size_t c = 0; c < ssid.length(); c++)
             {
@@ -661,7 +649,6 @@ namespace plant_nanny::services::bluetooth
         }
         json += "]";
 
-        // Clean up scan results
         WiFi.scanDelete();
 
         if (pWifiNetworksChar)

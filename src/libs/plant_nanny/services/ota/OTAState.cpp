@@ -3,29 +3,12 @@
 namespace plant_nanny::services::ota
 {
     OTAState::OTAState()
-        : update_partition_(nullptr), update_handle_(0), is_updating_(false), bytes_written_(0)
-    {
-    }
+        : update_partition_(nullptr), update_handle_(0), is_updating_(false), bytes_written_(0) {}
 
-    bool OTAState::is_updating() const
-    {
-        return is_updating_;
-    }
-
-    size_t OTAState::bytes_written() const
-    {
-        return bytes_written_;
-    }
-
-    const esp_partition_t *OTAState::partition() const
-    {
-        return update_partition_;
-    }
-
-    esp_ota_handle_t OTAState::handle() const
-    {
-        return update_handle_;
-    }
+    bool OTAState::is_updating() const { return is_updating_; }
+    size_t OTAState::bytes_written() const { return bytes_written_; }
+    const esp_partition_t *OTAState::partition() const { return update_partition_; }
+    esp_ota_handle_t OTAState::handle() const { return update_handle_; }
 
     void OTAState::begin_update(const esp_partition_t *partition, esp_ota_handle_t handle)
     {
@@ -35,10 +18,7 @@ namespace plant_nanny::services::ota
         bytes_written_ = 0;
     }
 
-    void OTAState::add_bytes(size_t bytes)
-    {
-        bytes_written_ += bytes;
-    }
+    void OTAState::add_bytes(size_t bytes) { bytes_written_ += bytes; }
 
     void OTAState::reset()
     {

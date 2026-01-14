@@ -59,17 +59,14 @@ namespace plant_nanny::services::button
         ButtonEvent event = ButtonEvent::NONE;
         unsigned long now = millis();
 
-        // Handle left button
         bool leftPressed = isLeftPressed();
         if (leftPressed && !_leftWasPressed)
         {
-            // Button just pressed
             _leftPressStart = now;
             _leftLongPressTriggered = false;
         }
         else if (leftPressed && _leftWasPressed)
         {
-            // Button held
             if (!_leftLongPressTriggered && (now - _leftPressStart) >= LONG_PRESS_DURATION_MS)
             {
                 _leftLongPressTriggered = true;
@@ -79,7 +76,6 @@ namespace plant_nanny::services::button
         }
         else if (!leftPressed && _leftWasPressed)
         {
-            // Button just released
             if (!_leftLongPressTriggered && (now - _leftPressStart) >= DEBOUNCE_MS)
             {
                 event = ButtonEvent::LEFT_SHORT_PRESS;
@@ -89,17 +85,14 @@ namespace plant_nanny::services::button
         }
         _leftWasPressed = leftPressed;
 
-        // Handle right button
         bool rightPressed = isRightPressed();
         if (rightPressed && !_rightWasPressed)
         {
-            // Button just pressed
             _rightPressStart = now;
             _rightLongPressTriggered = false;
         }
         else if (rightPressed && _rightWasPressed)
         {
-            // Button held
             if (!_rightLongPressTriggered && (now - _rightPressStart) >= LONG_PRESS_DURATION_MS)
             {
                 _rightLongPressTriggered = true;
@@ -109,7 +102,6 @@ namespace plant_nanny::services::button
         }
         else if (!rightPressed && _rightWasPressed)
         {
-            // Button just released
             if (!_rightLongPressTriggered && (now - _rightPressStart) >= DEBOUNCE_MS)
             {
                 event = ButtonEvent::RIGHT_SHORT_PRESS;

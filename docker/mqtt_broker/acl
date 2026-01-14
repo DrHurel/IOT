@@ -1,0 +1,52 @@
+# Mosquitto ACL (Access Control List) for PlantNanny
+# ==================================================
+# 
+# Topic structure:
+#   devices/<device_id>/data     - ESP32 → Server (telemetry)
+#   devices/<device_id>/command  - Server → ESP32 (commands)
+#   devices/<device_id>/status   - ESP32 status (online/offline via LWT)
+#
+# Patterns:
+#   %u = username
+#   %c = client id
+#   + = single-level wildcard
+#   # = multi-level wildcard
+#
+# ==================================================
+
+# Server user has full access to all device topics
+user plantnanny_server
+topic readwrite devices/#
+
+# Device user pattern - for development with shared credentials
+# In production, use individual device users with pattern: device_<device_id>
+user plantnanny_device
+# Can publish sensor data to any device topic (device validates its own ID)
+topic write devices/+/data
+# Can read commands for any device topic (device validates its own ID)
+topic read devices/+/command
+# Can publish status (LWT)
+topic write devices/+/status
+
+# Pattern-based rules for per-device credentials (production)
+# These allow devices with username device_<deviceId> to only access their own topics
+pattern write devices/%u/data
+pattern read devices/%u/command
+pattern write devices/%u/status
+
+# ===================
+# Legacy topic support (plantnanny/ prefix)
+# ===================
+# For backward compatibility with existing ESP32 firmware
+
+user plantnanny_server
+topic readwrite plantnanny/#
+
+user plantnanny_device
+topic write plantnanny/+/sensors
+topic read plantnanny/+/command
+topic write plantnanny/+/status
+
+pattern write plantnanny/%u/sensors
+pattern read plantnanny/%u/command
+pattern write plantnanny/%u/status

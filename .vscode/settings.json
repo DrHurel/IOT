@@ -1,2 +1,8 @@
 {
+    "chat.tools.terminal.autoApprove": {
+        "/^cd /home/hurel/repo/IOT/PlantNanny && flutter analyze 2>&1 \\| tail -20$/": {
+            "approve": true,
+            "matchCommandLine": true
+        }
+    }
 }

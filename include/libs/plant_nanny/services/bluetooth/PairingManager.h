@@ -59,7 +59,7 @@ namespace plant_nanny::services::bluetooth
         StateChangeCallback _stateChangeCallback;
         bool _initialized;
         unsigned long _pairingStartTime;
-        static constexpr unsigned long PAIRING_TIMEOUT_MS = 120000;  // 120 seconds timeout
+        static constexpr unsigned long PAIRING_TIMEOUT_MS = 120000;
 
         /**
          * @brief Generate a random 6-digit PIN
@@ -86,6 +86,8 @@ namespace plant_nanny::services::bluetooth
         static constexpr const char* SERVER_ID_CHAR_UUID = "12345678-1234-5678-1234-56789abcdef8";
         static constexpr const char* WIFI_NETWORKS_CHAR_UUID = "12345678-1234-5678-1234-56789abcdef9";
         static constexpr const char* PIN_CHAR_UUID = "12345678-1234-5678-1234-56789abcdefa";
+        static constexpr const char* MQTT_USERNAME_CHAR_UUID = "12345678-1234-5678-1234-56789abcdefb";
+        static constexpr const char* MQTT_PASSWORD_CHAR_UUID = "12345678-1234-5678-1234-56789abcdefc";
 
         PairingManager();
         ~PairingManager();
@@ -212,7 +214,8 @@ namespace plant_nanny::services::bluetooth
         /**
          * @brief Called when MQTT config is received via BLE
          */
-        void onMqttConfigReceived(const std::string& host, uint16_t port);
+        void onMqttConfigReceived(const std::string& host, uint16_t port, 
+                                  const std::string& username, const std::string& password);
     };
 
 } // namespace plant_nanny::services::bluetooth

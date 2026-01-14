@@ -2,7 +2,6 @@
 
 namespace common::ui
 {
-    // CanvasBuilder implementation
     CanvasBuilder::CanvasBuilder()
         : _callback(nullptr), _bgColor(Color::Black), _width(0), _height(0)
     {
@@ -34,7 +33,6 @@ namespace common::ui
         return canvas;
     }
 
-    // TextBuilder implementation
     TextBuilder::TextBuilder(const std::string &text)
         : _text(text), _fontSize(2), _align(components::Align::LEFT),
           _color(Color::White), _underline(false)
@@ -72,7 +70,6 @@ namespace common::ui
         return text;
     }
 
-    // ContainerBuilder implementation
     ContainerBuilder::ContainerBuilder()
         : _margin(0), _padding(0), _bgColor(Color::Black),
           _hasBorder(false), _borderColor(Color::White), _child(nullptr)
@@ -122,7 +119,6 @@ namespace common::ui
         return container;
     }
 
-    // ColumnBuilder implementation
     ColumnBuilder::ColumnBuilder()
         : _mainAlign(components::MainAxisAlignment::START),
           _crossAlign(components::CrossAxisAlignment::START),
@@ -171,7 +167,6 @@ namespace common::ui
         return column;
     }
 
-    // RowBuilder implementation
     RowBuilder::RowBuilder()
         : _mainAlign(components::MainAxisAlignment::START),
           _crossAlign(components::CrossAxisAlignment::START),

@@ -62,8 +62,6 @@ namespace plant_nanny::services::config
          */
         common::patterns::Result<void> setConfigured(bool configured);
 
-        // ==================== MQTT Configuration ====================
-
         /**
          * @brief Save MQTT broker configuration
          * @param host Broker hostname or IP address

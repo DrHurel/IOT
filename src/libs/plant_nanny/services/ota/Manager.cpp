@@ -67,10 +67,7 @@ namespace plant_nanny::services::ota
         return common::patterns::Result<void>::success();
     }
 
-    bool Manager::is_updating() const
-    {
-        return s_ota_state.is_updating();
-    }
+    bool Manager::is_updating() const { return s_ota_state.is_updating(); }
 
     common::patterns::Result<void> Manager::write_chunk(const uint8_t *data, size_t length)
     {

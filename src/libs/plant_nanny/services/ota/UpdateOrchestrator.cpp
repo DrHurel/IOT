@@ -20,7 +20,6 @@ namespace plant_nanny::services::ota
 
         LOG_IF_AVAILABLE(logger_, info, "Starting OTA update from URL");
 
-        // Start OTA update
         auto start_result = ota_manager_->start_update();
         if (start_result.failed())
         {
@@ -31,7 +30,6 @@ namespace plant_nanny::services::ota
         bytes_downloaded_ = 0;
         total_bytes_ = 0;
 
-        // Download and write firmware
         auto download_result = network_service_->download_file(
             firmware_url,
             [this](const uint8_t *data, size_t length) -> bool
@@ -49,10 +47,8 @@ namespace plant_nanny::services::ota
             {
                 bytes_downloaded_ = downloaded;
                 total_bytes_ = total;
-                if (total > 0 && downloaded % 10240 == 0) // Log every 10KB
-                {
+                if (total > 0 && downloaded % 10240 == 0)
                     LOG_IF_AVAILABLE(logger_, debug, "OTA progress");
-                }
             });
 
         if (download_result.failed())
@@ -62,7 +58,6 @@ namespace plant_nanny::services::ota
             return download_result;
         }
 
-        // Finalize OTA update
         auto finalize_result = ota_manager_->finalize_update();
         if (finalize_result.failed())
         {
@@ -76,11 +71,7 @@ namespace plant_nanny::services::ota
 
     uint8_t UpdateOrchestrator::get_progress() const
     {
-        if (total_bytes_ == 0)
-        {
-            return 0;
-        }
-        return static_cast<uint8_t>((bytes_downloaded_ * 100) / total_bytes_);
+        return total_bytes_ == 0 ? 0 : static_cast<uint8_t>((bytes_downloaded_ * 100) / total_bytes_);
     }
 
 } // namespace plant_nanny::services::ota

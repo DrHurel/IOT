@@ -40,9 +40,7 @@ namespace plant_nanny::services::config
         }
 
         _initialized = true;
-
         log_info("[CONFIG] Manager initialized");
-
         return common::patterns::Result<void>::success();
     }
 
@@ -58,12 +56,8 @@ namespace plant_nanny::services::config
         }
 
         log_info("[CONFIG] Performing factory reset...");
-
-        // Clear all stored preferences
         preferences.clear();
-
         log_info("[CONFIG] Factory reset complete");
-
         return common::patterns::Result<void>::success();
     }
 
@@ -82,9 +76,7 @@ namespace plant_nanny::services::config
 
         preferences.putString("wifi_ssid", ssid.c_str());
         preferences.putString("wifi_pass", password.c_str());
-
         log_info("[CONFIG] WiFi credentials saved");
-
         return common::patterns::Result<void>::success();
     }
 
@@ -149,8 +141,6 @@ namespace plant_nanny::services::config
         return common::patterns::Result<void>::success();
     }
 
-    // ==================== MQTT Configuration ====================
-
     common::patterns::Result<void> ConfigManager::saveMqttConfig(const std::string& host, uint16_t port)
     {
         if (!_initialized)
@@ -164,9 +154,7 @@ namespace plant_nanny::services::config
 
         preferences.putString("mqtt_host", host.c_str());
         preferences.putUShort("mqtt_port", port);
-
         log_info("[CONFIG] MQTT config saved");
-
         return common::patterns::Result<void>::success();
     }
 
@@ -183,9 +171,7 @@ namespace plant_nanny::services::config
 
         preferences.putString("mqtt_user", username.c_str());
         preferences.putString("mqtt_pass", password.c_str());
-
         log_info("[CONFIG] MQTT credentials saved");
-
         return common::patterns::Result<void>::success();
     }
 
@@ -298,7 +284,6 @@ namespace plant_nanny::services::config
             
             deviceId = std::string(macStr);
             setDeviceId(deviceId);
-            
             log_info("[CONFIG] Generated device ID from MAC");
         }
         

@@ -6,8 +6,6 @@
 #include <libs/common/ui/UI.h>
 #include "libs/plant_nanny/ui/screens/AlreadyPairedScreen.h"
 #include "libs/plant_nanny/ui/screens/WifiErrorScreen.h"
-
-// States
 #include "libs/plant_nanny/states/NormalState.h"
 #include "libs/plant_nanny/states/PairingState.h"
 #include "libs/plant_nanny/states/ResettingState.h"
@@ -57,8 +55,7 @@ namespace plant_nanny
     {
         using namespace common::ui;
         bootstrap();
-        
-        // Register all screens (OCP - add new screens without modifying App)
+
         _screenManager.registerScreen("splash", std::make_shared<ui::screens::SplashScreen>());
         _screenManager.registerScreen("normal", std::make_shared<ui::screens::NormalScreen>());
         _screenManager.registerScreen("pairing", _pairingScreen);
@@ -72,7 +69,6 @@ namespace plant_nanny
 
     void App::setupStates()
     {
-        // Register all states (OCP - add new states without modifying App)
         _stateMachine.registerState(std::make_shared<states::NormalState>());
         _stateMachine.registerState(std::make_shared<states::PairingState>());
         _stateMachine.registerState(std::make_shared<states::ResettingState>());
@@ -87,8 +83,7 @@ namespace plant_nanny
         
         _configManager.initialize();
         _pairingManager.initialize();
-        
-        // Setup BLE state change callback for screen transitions
+
         _pairingManager.setStateChangeCallback([this](services::bluetooth::PairingState newState) {
             switch (newState)
             {
@@ -106,50 +101,36 @@ namespace plant_nanny
                     break;
             }
         });
-        
-        // Setup BLE WiFi configuration callback
+
         _pairingManager.setWifiConfigCallback([this](const services::bluetooth::WifiCredentials& creds) {
             log_info("[APP] WiFi credentials received via BLE");
-            
-            // Save credentials
             _configManager.saveWifiCredentials(creds.ssid, creds.password);
-            
-            // Try to connect
             _networkManager.set_credentials(creds.ssid, creds.password);
             auto result = _networkManager.connect();
-            
-            // Notify BLE about result
             _pairingManager.notifyWifiConfigured(result.succeed());
             
             if (result.succeed())
             {
                 log_info("[APP] WiFi connected via BLE config");
                 _configManager.setConfigured(true);
-                
-                // Set IP address for BLE clients to read
+
                 auto ipResult = _networkManager.get_ip_address();
                 if (ipResult.succeed())
                 {
                     _pairingManager.setIpAddress(ipResult.value());
                 }
-                
-                // Setup MQTT after successful WiFi connection
+
                 setupMqtt();
-                
-                // State is already set to PAIRED in notifyWifiConfigured
             }
             else
             {
                 log_info("[APP] WiFi connection failed - showing error screen");
                 _screenManager.navigateTo("wifi_error");
                 _screenManager.render();
-                
-                // Set state back to awaiting config so user can try again
                 _pairingManager.setState(services::bluetooth::PairingState::AWAITING_WIFI_CONFIG);
             }
         });
-        
-        // Setup BLE MQTT configuration callback
+
         _pairingManager.setMqttConfigCallback([this](const services::bluetooth::MqttConfig& config) {
             log_info("[APP] MQTT config received via BLE");
             _configManager.saveMqttConfig(config.host, config.port);
@@ -163,7 +144,6 @@ namespace plant_nanny
 
     void App::setupNetwork()
     {
-        // Try to connect using saved credentials
         auto ssidResult = _configManager.getWifiSsid();
         auto passResult = _configManager.getWifiPassword();
         
@@ -184,7 +164,6 @@ namespace plant_nanny
 
     void App::setupMqtt()
     {
-        // Check if MQTT is configured
         if (!_configManager.isMqttConfigured())
         {
             log_info("[APP] MQTT not configured, skipping");
@@ -206,8 +185,7 @@ namespace plant_nanny
             log_info("[APP] MQTT init failed");
             return;
         }
-        
-        // Set credentials if available
+
         auto userResult = _configManager.getMqttUsername();
         auto passResult = _configManager.getMqttPassword();
         if (userResult.succeed() && !userResult.value().empty())
@@ -215,21 +193,16 @@ namespace plant_nanny
             _mqttService.set_credentials(userResult.value(), passResult.value());
         }
         
-        // Set the reading callback to provide sensor data
-        // For now, return dummy data - replace with actual sensor readings
         _mqttService.set_reading_callback([]() {
             services::mqtt::SensorReading reading;
-            // TODO: Replace with actual sensor readings
+            // TODO: Get actual sensor readings
             reading.temperatureC = 22.5f;
             reading.humidityPct = 45.0f;
             reading.luminosityPct = 60.0f;
             return reading;
         });
-        
-        // Set publish interval (default 60 seconds)
+
         _mqttService.set_publish_interval(60000);
-        
-        // Enable MQTT publishing
         _mqttService.set_enabled(true);
         
         log_info("[APP] MQTT service configured");
@@ -238,14 +211,11 @@ namespace plant_nanny
     void App::initialize()
     {
         Serial.begin(115200);
-        
-        // Create service registry first (before any logging)
         common::service::DefaultRegistry::create();
 #ifdef DEBUG
         common::service::add<common::logger::Logger, common::logger::SerialLogger>();
 #endif
 
-        // Setup components (SRP - each method has single responsibility)
         setupScreens();
         setupStates();
         setupServices();
@@ -254,11 +224,8 @@ namespace plant_nanny
         _screenManager.navigateTo("splash");
         delay(1500);
 
-        // Setup network and MQTT after splash
         setupNetwork();
         setupMqtt();
-
-        // Transition to normal state
         _stateMachine.transitionTo("normal", *this);
         log_info("[APP] Ready");
     }
@@ -267,14 +234,9 @@ namespace plant_nanny
     {
         _buttonHandler.poll();
         _stateMachine.update(*this);
-        
-        // Maintain network connection
         _networkManager.maintain_connection();
-        
-        // Update MQTT service (handles connection, publishing)
         _mqttService.update();
-        
-        // Handle pending transitions (requested by states)
+
         if (!_pendingTransition.empty())
         {
             std::string nextState = _pendingTransition;

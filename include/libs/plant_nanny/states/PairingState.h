@@ -85,10 +85,9 @@ namespace plant_nanny::states
 
         void update(AppContext& context) override
         {
-            // If device was already paired, show error screen briefly then return to normal
             if (_alreadyPaired)
             {
-                delay(3000);  // Let user read the error message
+                delay(3000);
                 context.requestTransition("normal");
                 return;
             }
@@ -100,7 +99,7 @@ namespace plant_nanny::states
                 if (_pairingSuccess)
                 {
                     context.screenManager().navigateTo("success");
-                    delay(2000);
+                    delay(5000);  // Wait for Flutter app to complete registration
                 }
                 context.requestTransition("normal");
             }

@@ -21,12 +21,42 @@ namespace plant_nanny::services::mqtt
     };
 
     /**
+     * @brief Command types received from server
+     */
+    enum class CommandType
+    {
+        Unknown,
+        SendNow,        // Force immediate sensor reading
+        PumpWater,      // Activate water pump
+        SetInterval,    // Change publish interval
+        Restart,        // Restart device
+        OtaUpdate       // Trigger OTA update
+    };
+
+    /**
+     * @brief Command received from server
+     */
+    struct Command
+    {
+        CommandType type;
+        int durationMs;      // For pump_water
+        int amountMl;        // For pump_water
+        int intervalMs;      // For set_interval
+        std::string otaUrl;  // For ota_update
+    };
+
+    /**
      * @brief MQTT Service for publishing sensor data to PlantNanny server
      *
      * Handles connection management, reconnection logic, and periodic publishing
      * of sensor readings to the MQTT broker.
      *
-     * Topics used:
+     * Topic structure (recommended architecture):
+     *   devices/{deviceId}/data     - ESP32 → Server (telemetry, JSON)
+     *   devices/{deviceId}/command  - Server → ESP32 (commands, JSON)
+     *   devices/{deviceId}/status   - Device status (online/offline via LWT)
+     *
+     * Legacy topics (for backward compatibility):
      *   plantnanny/{deviceId}/sensors - Periodic sensor readings (JSON)
      *   plantnanny/{deviceId}/status  - Device status (online/offline)
      */
@@ -34,6 +64,7 @@ namespace plant_nanny::services::mqtt
     {
     public:
         using ReadingCallback = std::function<SensorReading()>;
+        using CommandCallback = std::function<void(const Command&)>;
 
     private:
         common::service::Accessor<common::logger::Logger> logger_;
@@ -54,14 +85,28 @@ namespace plant_nanny::services::mqtt
         uint32_t publish_interval_ms_;
         
         ReadingCallback reading_callback_;
+        CommandCallback command_callback_;
 
-        static constexpr uint32_t DEFAULT_PUBLISH_INTERVAL_MS = 60000;  // 1 minute
-        static constexpr uint32_t RECONNECT_INTERVAL_MS = 5000;         // 5 seconds
-        static constexpr uint32_t MQTT_TIMEOUT_MS = 5000;               // 5 seconds
+        bool use_new_topic_structure_;
+
+        static constexpr uint32_t DEFAULT_PUBLISH_INTERVAL_MS = 60000;
+        static constexpr uint32_t RECONNECT_INTERVAL_MS = 5000;
+        static constexpr uint32_t MQTT_TIMEOUT_MS = 5000;
+        static constexpr uint8_t MQTT_QOS = 1;
 
         bool attempt_connect();
         void publish_status(const char* status);
+        void subscribe_to_commands();
+        void handle_message(char* topic, byte* payload, unsigned int length);
+        Command parse_command(const char* payload, unsigned int length);
         std::string build_topic(const char* suffix) const;
+        std::string build_data_topic() const;
+        std::string build_command_topic() const;
+        std::string build_status_topic() const;
+
+        // Static callback wrapper for PubSubClient
+        static void mqtt_callback_wrapper(char* topic, byte* payload, unsigned int length);
+        static MQTTService* instance_;
 
     public:
         MQTTService();
@@ -74,15 +119,17 @@ namespace plant_nanny::services::mqtt
 
         /**
          * @brief Initialize the MQTT service
-         * @param device_id Unique device identifier
+         * @param device_id Unique device identifier (MAC address recommended)
          * @param broker_host MQTT broker hostname or IP
          * @param broker_port MQTT broker port (default 1883)
+         * @param use_new_topics Use new topic structure (devices/<id>/data) if true
          * @return Result indicating success or failure
          */
         common::patterns::Result<void> initialize(
             const std::string& device_id,
             const std::string& broker_host,
-            uint16_t broker_port = 1883);
+            uint16_t broker_port = 1883,
+            bool use_new_topics = true);
 
         /**
          * @brief Set MQTT authentication credentials
@@ -96,6 +143,12 @@ namespace plant_nanny::services::mqtt
          * @param callback Function that returns current SensorReading
          */
         void set_reading_callback(ReadingCallback callback);
+
+        /**
+         * @brief Set the callback for received commands from server
+         * @param callback Function called when command is received
+         */
+        void set_command_callback(CommandCallback callback);
 
         /**
          * @brief Set the publish interval for periodic updates
@@ -122,6 +175,12 @@ namespace plant_nanny::services::mqtt
         bool is_connected() const;
 
         /**
+         * @brief Get the device ID
+         * @return Device ID string
+         */
+        const std::string& get_device_id() const { return device_id_; }
+
+        /**
          * @brief Connect to the MQTT broker
          * @return Result indicating success or failure
          */
@@ -140,12 +199,17 @@ namespace plant_nanny::services::mqtt
         common::patterns::Result<void> publish_reading(const SensorReading& reading);
 
         /**
+         * @brief Force send sensor data immediately (triggered by send_now command)
+         */
+        void force_send_reading();
+
+        /**
          * @brief Main update loop - call this regularly from app loop
          *
          * Handles:
          * - Connection maintenance and reconnection
          * - Periodic sensor reading publishing
-         * - MQTT client loop processing
+         * - MQTT client loop processing (including incoming commands)
          */
         void update();
 

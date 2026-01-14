@@ -43,21 +43,14 @@ namespace plant_nanny::states
             ESP.restart();
         }
 
-        void onExit(AppContext& context) override
-        {
-            // Never called - we restart
-        }
+        void onExit(AppContext& context) override {}
 
         std::string handleButton(AppContext& context, services::button::ButtonEvent event) override
         {
-            // Ignore buttons during reset
             return "";
         }
 
-        void update(AppContext& context) override
-        {
-            // Nothing to update - we're restarting
-        }
+        void update(AppContext& context) override {}
     };
 
 } // namespace plant_nanny::states

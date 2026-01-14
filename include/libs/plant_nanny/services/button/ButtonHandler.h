@@ -14,9 +14,9 @@ namespace plant_nanny::services::button
     {
         NONE,
         LEFT_SHORT_PRESS,
-        LEFT_LONG_PRESS,   // 3 seconds
+        LEFT_LONG_PRESS,
         RIGHT_SHORT_PRESS,
-        RIGHT_LONG_PRESS   // 3 seconds
+        RIGHT_LONG_PRESS
     };
 
     using ButtonCallback = std::function<void(ButtonEvent)>;

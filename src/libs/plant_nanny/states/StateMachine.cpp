@@ -1,18 +1,4 @@
 #include "libs/plant_nanny/states/StateMachine.h"
-#include "libs/common/service/Accessor.h"
-#include "libs/common/logger/Logger.h"
-
-namespace
-{
-    void log_info(const char* message)
-    {
-        auto logger = common::service::get<common::logger::Logger>();
-        if (logger.is_available())
-        {
-            logger->info(message);
-        }
-    }
-}
 
 namespace plant_nanny
 {

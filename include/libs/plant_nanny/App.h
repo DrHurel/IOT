@@ -14,7 +14,7 @@
 #include "libs/plant_nanny/services/mqtt/MQTTService.h"
 #include "libs/plant_nanny/services/network/Manager.h"
 
-// UI (SRP - separated from App)
+// UI
 #include "libs/plant_nanny/ui/ScreenManager.h"
 #include "libs/plant_nanny/ui/screens/SplashScreen.h"
 #include "libs/plant_nanny/ui/screens/NormalScreen.h"
@@ -24,7 +24,7 @@
 #include "libs/plant_nanny/ui/screens/WifiConfigScreen.h"
 #include "libs/plant_nanny/ui/screens/ConfigCompleteScreen.h"
 
-// State machine (OCP - new states without modifying App)
+// State machine
 #include "libs/plant_nanny/states/AppContext.h"
 #include "libs/plant_nanny/states/StateMachine.h"
 
@@ -45,22 +45,15 @@ namespace plant_nanny
     };
 
     /**
-     * @brief Main application class - coordinates components (SRP)
-     * 
-     * SOLID principles applied:
-     * - SRP: App only coordinates, UI in ScreenManager, logic in States
-     * - OCP: New screens/states without modifying App
-     * - LSP: All IScreen/IAppState implementations are substitutable
-     * - ISP: Focused interfaces (IScreen, IAppState, AppContext)
-     * - DIP: App depends on abstractions (IScreen, IAppState, AppContext)
+     * @brief Main application class - coordinates components
      */
     class App : public common::App, public AppContext
     {
     private:
         // Event system
         esp_event_loop_handle_t _event_loop;
-        
-        // Services (DIP - could be injected via interfaces)
+
+        // Services
         services::button::ButtonHandler _buttonHandler;
         services::bluetooth::PairingManager _pairingManager;
         services::config::ConfigManager _configManager;
@@ -68,11 +61,11 @@ namespace plant_nanny
         services::mqtt::MQTTService _mqttService;
         std::unique_ptr<PubSubClient> _mqtt_client;
         
-        // UI management (SRP - separated)
+        // UI
         ui::ScreenManager _screenManager;
         std::shared_ptr<ui::screens::PairingScreen> _pairingScreen;
         
-        // State machine (OCP - extensible)
+        // State machine
         StateMachine _stateMachine;
         
         // State data
@@ -101,7 +94,7 @@ namespace plant_nanny
         esp_err_t on(int32_t event_id, esp_event_handler_t handler, void* handler_arg = nullptr) override;
         esp_err_t emit(int32_t event_id, void* event_data = nullptr, size_t event_data_size = 0) const override;
 
-        // AppContext interface (DIP - states depend on this abstraction)
+        // AppContext interface
         ui::ScreenManager& screenManager() override { return _screenManager; }
         services::bluetooth::PairingManager& pairingManager() override { return _pairingManager; }
         services::config::ConfigManager& configManager() override { return _configManager; }

@@ -35,10 +35,7 @@ namespace plant_nanny::states
             log_state("[STATE] Entered Normal");
         }
 
-        void onExit(AppContext& context) override
-        {
-            // Nothing to clean up
-        }
+        void onExit(AppContext& context) override {}
 
         std::string handleButton(AppContext& context, services::button::ButtonEvent event) override
         {
@@ -59,10 +56,7 @@ namespace plant_nanny::states
             }
         }
 
-        void update(AppContext& context) override
-        {
-            // Nothing to update in normal state
-        }
+        void update(AppContext& context) override {}
     };
 
 } // namespace plant_nanny::states

@@ -1,17 +1,14 @@
 #include "libs/common/ui/core.h"
 
 #ifdef NATIVE_TEST
-// For native tests, use the mock implementation
 #include "testing/libs/common/ui/MockDisplay.h"
 #include <memory>
 
-// Static fallback display for tests that don't provide their own
 static testing::mocks::MockDisplay *fallback_display = nullptr;
 
 // Function to get the test display - tests can override this by defining display
 __attribute__((weak)) testing::mocks::MockDisplay *get_test_display_ptr()
 {
-    // This function will be overridden by tests that define their own display management
     return nullptr;
 }
 
@@ -24,7 +21,6 @@ namespace common::ui
 
     void bootstrap()
     {
-        // For tests that don't set up a display, create a fallback
         auto *test_display = get_test_display_ptr();
         if (!test_display && !fallback_display)
         {
@@ -71,14 +67,12 @@ namespace common::ui
         {
             return *reinterpret_cast<TFT_eSPI *>(fallback_display);
         }
-        // Last resort: create fallback if it doesn't exist
         fallback_display = new testing::mocks::MockDisplay();
         return *reinterpret_cast<TFT_eSPI *>(fallback_display);
     }
 }
 
 #else
-// For real hardware, use the actual TFT_eSPI implementation
 #include <TFT_eSPI.h>
 
 namespace common::ui
