@@ -1,8 +1,5 @@
 #include <libs/common/logger/SerialLogger.h>
-
-#ifdef DEBUG
 #include <HardwareSerial.h>
-#endif
 
 namespace common::logger
 {
@@ -10,7 +7,8 @@ namespace common::logger
 
     void SerialLogger::log(LogLevel level, const char *message)
     {
-#ifdef DEBUG
+        // SerialLogger always logs - use NullLogger via LoggerFactory
+        // for builds where logging should be disabled (SOLID: SRP)
         const char *levelStr = "";
         switch (level)
         {
@@ -35,9 +33,5 @@ namespace common::logger
         Serial.print(levelStr);
         Serial.print("] ");
         Serial.println(message);
-#else
-        (void)level;
-        (void)message;
-#endif
     }
 }
