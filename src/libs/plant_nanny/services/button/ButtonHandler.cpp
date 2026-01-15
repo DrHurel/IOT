@@ -17,7 +17,15 @@ namespace plant_nanny::services::button
     common::patterns::Result<void> ButtonHandler::initialize()
     {
         pinMode(BUTTON_LEFT_PIN, INPUT_PULLUP);
-        pinMode(BUTTON_RIGHT_PIN, INPUT_PULLUP);
+        pinMode(BUTTON_RIGHT_PIN, INPUT);  // GPIO 35 is input-only, no internal pullup
+        
+        // Give the pins time to stabilize
+        delay(10);
+        
+        // Initialize state to current reading to avoid false triggers on startup
+        _leftWasPressed = isLeftPressed();
+        _rightWasPressed = isRightPressed();
+        
         return common::patterns::Result<void>::success();
     }
 
