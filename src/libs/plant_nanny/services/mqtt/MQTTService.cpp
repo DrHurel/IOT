@@ -1,36 +1,7 @@
 #include "libs/plant_nanny/services/mqtt/MQTTService.h"
 #include <Arduino.h>
 #include <ArduinoJson.h>
-
-namespace
-{
-    void log_info(const char* message)
-    {
-        auto logger = common::service::get<common::logger::Logger>();
-        if (logger.is_available())
-        {
-            logger->info(message);
-        }
-    }
-
-    void log_error(const char* message)
-    {
-        auto logger = common::service::get<common::logger::Logger>();
-        if (logger.is_available())
-        {
-            logger->error(message);
-        }
-    }
-
-    void log_debug(const char* message)
-    {
-        auto logger = common::service::get<common::logger::Logger>();
-        if (logger.is_available())
-        {
-            logger->debug(message);
-        }
-    }
-}
+#include "libs/common/logger/Log.h"
 
 namespace plant_nanny::services::mqtt
 {
@@ -104,7 +75,7 @@ namespace plant_nanny::services::mqtt
         char msg[128];
         snprintf(msg, sizeof(msg), "[MQTT] Service initialized - Device: %s, Broker: %s:%u", 
                  device_id_.c_str(), broker_host_.c_str(), broker_port_);
-        log_info(msg);
+        LOG_INFO(msg);
 
         return common::patterns::Result<void>::success();
     }
@@ -137,11 +108,11 @@ namespace plant_nanny::services::mqtt
             enabled_ = enabled;
             if (enabled)
             {
-                log_info("[MQTT] Publishing enabled");
+                LOG_INFO("[MQTT] Publishing enabled");
             }
             else
             {
-                log_info("[MQTT] Publishing disabled");
+                LOG_INFO("[MQTT] Publishing disabled");
                 if (is_connected())
                 {
                     publish_status("offline");
@@ -197,11 +168,11 @@ namespace plant_nanny::services::mqtt
         {
             char msg[128];
             snprintf(msg, sizeof(msg), "[MQTT] Subscribed to: %s", command_topic.c_str());
-            log_info(msg);
+            LOG_INFO(msg);
         }
         else
         {
-            log_error("[MQTT] Failed to subscribe to command topic");
+            LOG_ERROR("[MQTT] Failed to subscribe to command topic");
         }
     }
 
@@ -209,7 +180,7 @@ namespace plant_nanny::services::mqtt
     {
         char msg[128];
         snprintf(msg, sizeof(msg), "[MQTT] Message received on: %s (%u bytes)", topic, length);
-        log_debug(msg);
+        LOG_DEBUG(msg);
 
         std::string topic_str(topic);
         std::string expected_command_topic = build_command_topic();
@@ -217,7 +188,7 @@ namespace plant_nanny::services::mqtt
         if (topic_str != expected_command_topic)
         {
             snprintf(msg, sizeof(msg), "[MQTT] Ignoring message on unexpected topic: %s", topic);
-            log_debug(msg);
+            LOG_DEBUG(msg);
             return;
         }
 
@@ -248,7 +219,7 @@ namespace plant_nanny::services::mqtt
         {
             char msg[64];
             snprintf(msg, sizeof(msg), "[MQTT] Failed to parse command JSON: %s", error.c_str());
-            log_error(msg);
+            LOG_ERROR(msg);
             return cmd;
         }
 
@@ -257,7 +228,7 @@ namespace plant_nanny::services::mqtt
         if (strcmp(action, "send_now") == 0)
         {
             cmd.type = CommandType::SendNow;
-            log_info("[MQTT] Received command: send_now");
+            LOG_INFO("[MQTT] Received command: send_now");
         }
         else if (strcmp(action, "pump_water") == 0)
         {
@@ -268,7 +239,7 @@ namespace plant_nanny::services::mqtt
             char msg[64];
             snprintf(msg, sizeof(msg), "[MQTT] Received command: pump_water (%dms, %dml)", 
                      cmd.durationMs, cmd.amountMl);
-            log_info(msg);
+            LOG_INFO(msg);
         }
         else if (strcmp(action, "set_interval") == 0)
         {
@@ -277,7 +248,7 @@ namespace plant_nanny::services::mqtt
             
             char msg[64];
             snprintf(msg, sizeof(msg), "[MQTT] Received command: set_interval (%dms)", cmd.intervalMs);
-            log_info(msg);
+            LOG_INFO(msg);
             
             // Apply interval change directly
             set_publish_interval(cmd.intervalMs);
@@ -285,19 +256,19 @@ namespace plant_nanny::services::mqtt
         else if (strcmp(action, "restart") == 0)
         {
             cmd.type = CommandType::Restart;
-            log_info("[MQTT] Received command: restart");
+            LOG_INFO("[MQTT] Received command: restart");
         }
         else if (strcmp(action, "ota_update") == 0)
         {
             cmd.type = CommandType::OtaUpdate;
             cmd.otaUrl = doc["url"] | "";
-            log_info("[MQTT] Received command: ota_update");
+            LOG_INFO("[MQTT] Received command: ota_update");
         }
         else
         {
             char msg[64];
             snprintf(msg, sizeof(msg), "[MQTT] Unknown command action: %s", action);
-            log_error(msg);
+            LOG_ERROR(msg);
         }
 
         return cmd;
@@ -310,7 +281,14 @@ namespace plant_nanny::services::mqtt
             return false;
         }
 
-        log_info("[MQTT] Attempting connection...");
+        LOG_INFO("[MQTT] Attempting connection...");
+        
+        // Debug: Print connection details
+        char debug_msg[256];
+        snprintf(debug_msg, sizeof(debug_msg), "[MQTT] Connecting to %s:%u as %s (user: %s)", 
+                 broker_host_.c_str(), broker_port_, device_id_.c_str(),
+                 username_.empty() ? "(none)" : username_.c_str());
+        Serial.println(debug_msg);
 
         bool connected = false;
         std::string client_id = "plantnanny-" + device_id_;
@@ -342,7 +320,7 @@ namespace plant_nanny::services::mqtt
 
         if (connected)
         {
-            log_info("[MQTT] Connected to broker");
+            LOG_INFO("[MQTT] Connected to broker");
             publish_status("online");
             subscribe_to_commands();
             return true;
@@ -351,7 +329,7 @@ namespace plant_nanny::services::mqtt
         {
             char error_msg[64];
             snprintf(error_msg, sizeof(error_msg), "[MQTT] Connection failed, rc=%d", mqtt_client_.state());
-            log_error(error_msg);
+            LOG_ERROR(error_msg);
             return false;
         }
     }
@@ -384,7 +362,7 @@ namespace plant_nanny::services::mqtt
         {
             publish_status("offline");
             mqtt_client_.disconnect();
-            log_info("[MQTT] Disconnected");
+            LOG_INFO("[MQTT] Disconnected");
         }
     }
 
@@ -421,7 +399,7 @@ namespace plant_nanny::services::mqtt
 
         if (mqtt_client_.publish(topic.c_str(), reinterpret_cast<const uint8_t*>(payload), len, false))
         {
-            log_info("[MQTT] Sensor reading published");
+            LOG_INFO("[MQTT] Sensor reading published");
             return common::patterns::Result<void>::success();
         }
 
@@ -433,7 +411,7 @@ namespace plant_nanny::services::mqtt
     {
         if (reading_callback_)
         {
-            log_info("[MQTT] Force sending sensor reading");
+            LOG_INFO("[MQTT] Force sending sensor reading");
             SensorReading reading = reading_callback_();
             publish_reading(reading);
             last_publish_time_ = millis();
