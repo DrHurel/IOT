@@ -113,9 +113,15 @@ namespace plant_nanny::services::config
 
         /**
          * @brief Get or generate a unique device ID
-         * If no device ID is stored, generates one based on MAC address
+         * If no device ID is stored (or legacy format detected), generates a new UUID v4
          */
         std::string getOrCreateDeviceId();
+
+    private:
+        /**
+         * @brief Generate a random UUID v4
+         */
+        std::string generateUUID();
     };
 
 } // namespace plant_nanny::services::config

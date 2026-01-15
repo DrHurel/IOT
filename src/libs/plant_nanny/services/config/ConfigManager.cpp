@@ -1,21 +1,8 @@
 #include "libs/plant_nanny/services/config/ConfigManager.h"
 #include <Preferences.h>
 #include <Arduino.h>
-#include <WiFi.h>
-#include "libs/common/service/Accessor.h"
-#include "libs/common/logger/Logger.h"
-
-namespace
-{
-    void log_info(const char* message)
-    {
-        auto logger = common::service::get<common::logger::Logger>();
-        if (logger.is_available())
-        {
-            logger->info(message);
-        }
-    }
-}
+#include <esp_random.h>
+#include "libs/common/logger/Log.h"
 
 namespace plant_nanny::services::config
 {
@@ -40,7 +27,7 @@ namespace plant_nanny::services::config
         }
 
         _initialized = true;
-        log_info("[CONFIG] Manager initialized");
+        LOG_INFO("[CONFIG] Manager initialized");
         return common::patterns::Result<void>::success();
     }
 
@@ -55,9 +42,9 @@ namespace plant_nanny::services::config
             }
         }
 
-        log_info("[CONFIG] Performing factory reset...");
+        LOG_INFO("[CONFIG] Performing factory reset...");
         preferences.clear();
-        log_info("[CONFIG] Factory reset complete");
+        LOG_INFO("[CONFIG] Factory reset complete");
         return common::patterns::Result<void>::success();
     }
 
@@ -76,7 +63,7 @@ namespace plant_nanny::services::config
 
         preferences.putString("wifi_ssid", ssid.c_str());
         preferences.putString("wifi_pass", password.c_str());
-        log_info("[CONFIG] WiFi credentials saved");
+        LOG_INFO("[CONFIG] WiFi credentials saved");
         return common::patterns::Result<void>::success();
     }
 
@@ -154,7 +141,7 @@ namespace plant_nanny::services::config
 
         preferences.putString("mqtt_host", host.c_str());
         preferences.putUShort("mqtt_port", port);
-        log_info("[CONFIG] MQTT config saved");
+        LOG_INFO("[CONFIG] MQTT config saved");
         return common::patterns::Result<void>::success();
     }
 
@@ -171,7 +158,7 @@ namespace plant_nanny::services::config
 
         preferences.putString("mqtt_user", username.c_str());
         preferences.putString("mqtt_pass", password.c_str());
-        log_info("[CONFIG] MQTT credentials saved");
+        LOG_INFO("[CONFIG] MQTT credentials saved");
         return common::patterns::Result<void>::success();
     }
 
@@ -268,23 +255,48 @@ namespace plant_nanny::services::config
         return common::patterns::Result<void>::success();
     }
 
+    std::string ConfigManager::generateUUID()
+    {
+        // Generate UUID v4 (random) format: xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx
+        // where y is 8, 9, a, or b
+        uint8_t uuid[16];
+        for (int i = 0; i < 16; i++)
+        {
+            uuid[i] = esp_random() & 0xFF;
+        }
+        
+        // Set version 4 (random UUID)
+        uuid[6] = (uuid[6] & 0x0F) | 0x40;
+        // Set variant (10xx for RFC 4122)
+        uuid[8] = (uuid[8] & 0x3F) | 0x80;
+        
+        char uuidStr[37];  // 36 chars + null terminator
+        snprintf(uuidStr, sizeof(uuidStr),
+                 "%02x%02x%02x%02x-%02x%02x-%02x%02x-%02x%02x-%02x%02x%02x%02x%02x%02x",
+                 uuid[0], uuid[1], uuid[2], uuid[3],
+                 uuid[4], uuid[5],
+                 uuid[6], uuid[7],
+                 uuid[8], uuid[9],
+                 uuid[10], uuid[11], uuid[12], uuid[13], uuid[14], uuid[15]);
+        
+        return std::string(uuidStr);
+    }
+
     std::string ConfigManager::getOrCreateDeviceId()
     {
         std::string deviceId = getDeviceId();
         
-        if (deviceId.empty())
+        // UUID v4 format: xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx (36 chars)
+        // Regenerate if empty, wrong length, or legacy MAC-based format (esp32-...)
+        bool needsRegeneration = deviceId.empty() || 
+                                  deviceId.length() != 36 ||
+                                  deviceId.rfind("esp32-", 0) == 0;
+        
+        if (needsRegeneration)
         {
-            // Generate device ID from MAC address
-            uint8_t mac[6];
-            WiFi.macAddress(mac);
-            
-            char macStr[18];
-            snprintf(macStr, sizeof(macStr), "esp32-%02x%02x%02x%02x%02x%02x",
-                     mac[0], mac[1], mac[2], mac[3], mac[4], mac[5]);
-            
-            deviceId = std::string(macStr);
+            deviceId = generateUUID();
             setDeviceId(deviceId);
-            log_info("[CONFIG] Generated device ID from MAC");
+            LOG_INFO("[CONFIG] Generated new UUID device ID");
         }
         
         return deviceId;
