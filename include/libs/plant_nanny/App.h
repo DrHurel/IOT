@@ -10,9 +10,11 @@
 // Services
 #include "libs/plant_nanny/services/button/ButtonHandler.h"
 #include "libs/plant_nanny/services/bluetooth/PairingManager.h"
+#include "libs/plant_nanny/services/captors/SensorManager.h"
 #include "libs/plant_nanny/services/config/ConfigManager.h"
 #include "libs/plant_nanny/services/mqtt/MQTTService.h"
 #include "libs/plant_nanny/services/network/Manager.h"
+#include "libs/plant_nanny/services/pump/Pump.h"
 
 // UI
 #include "libs/plant_nanny/ui/ScreenManager.h"
@@ -56,9 +58,11 @@ namespace plant_nanny
         // Services
         services::button::ButtonHandler _buttonHandler;
         services::bluetooth::PairingManager _pairingManager;
+        services::captors::SensorManager _sensorManager;
         services::config::ConfigManager _configManager;
         services::network::Manager _networkManager;
         services::mqtt::MQTTService _mqttService;
+        services::pump::Pump _pump;
         std::unique_ptr<PubSubClient> _mqtt_client;
         
         // UI
@@ -76,6 +80,7 @@ namespace plant_nanny
         void setupScreens();
         void setupStates();
         void setupServices();
+        void setupSensors();
         void setupNetwork();
         void setupMqtt();
 
@@ -110,8 +115,15 @@ namespace plant_nanny
         // MQTT management
         services::mqtt::MQTTService& mqttService() { return _mqttService; }
 
+        // Pump control
+        void setPumpActive(bool active) { _pump.setActive(active); }
+        bool isPumpActive() const { return _pump.isActive(); }
+
         // OTA management
         common::patterns::Result<void> perform_ota_update(const std::string &firmware_url);
+        
+    private:
+        void handleMqttCommand(const services::mqtt::Command& cmd);
     };
 
 } // namespace plant_nanny
