@@ -52,6 +52,7 @@ namespace plant_nanny::services::bluetooth
     private:
         PairingState _state;
         std::string _currentPin;
+        std::string _deviceId;  // Device ID to expose via BLE
         PinDisplayCallback _pinDisplayCallback;
         PairingCompleteCallback _pairingCompleteCallback;
         WifiConfigCallback _wifiConfigCallback;
@@ -185,6 +186,12 @@ namespace plant_nanny::services::bluetooth
          * @brief Notify that WiFi configuration was successful
          */
         void notifyWifiConfigured(bool success);
+
+        /**
+         * @brief Set the device ID to expose via BLE
+         * This should be called after getting/creating the device ID from ConfigManager
+         */
+        void setDeviceId(const std::string& deviceId);
 
         /**
          * @brief Set the IP address to expose via BLE after WiFi connects

@@ -2,8 +2,7 @@
 #include <Arduino.h>
 #include <NimBLEDevice.h>
 #include <WiFi.h>
-#include "libs/common/service/Accessor.h"
-#include "libs/common/logger/Logger.h"
+#include "libs/common/logger/Log.h"
 
 namespace plant_nanny::services::bluetooth
 {
@@ -16,15 +15,6 @@ namespace plant_nanny::services::bluetooth
 
     namespace
     {
-        void log_info(const char* message)
-        {
-            auto logger = common::service::get<common::logger::Logger>();
-            if (logger.is_available())
-            {
-                logger->info(message);
-            }
-        }
-
         PairingManager* g_pairingManager = nullptr;
     }
 
@@ -42,7 +32,7 @@ namespace plant_nanny::services::bluetooth
             char msg[128];
             snprintf(msg, sizeof(msg), "[BLE] Received write on %s: %s", uuid.c_str(), 
                 (uuid == PairingManager::PIN_CHAR_UUID) ? "***" : value.c_str());
-            log_info(msg);
+            LOG_INFO(msg);
 
             if (uuid == PairingManager::PIN_CHAR_UUID)
             {
@@ -51,7 +41,7 @@ namespace plant_nanny::services::bluetooth
                     bool pinValid = g_pairingManager->verifyPin(value);
                     if (pinValid)
                     {
-                        log_info("[BLE] PIN verified successfully");
+                        LOG_INFO("[BLE] PIN verified successfully");
                         g_pairingManager->setState(PairingState::AWAITING_WIFI_CONFIG);
                         if (pConfigStatusChar)
                         {
@@ -61,7 +51,7 @@ namespace plant_nanny::services::bluetooth
                     }
                     else
                     {
-                        log_info("[BLE] PIN verification failed");
+                        LOG_INFO("[BLE] PIN verification failed");
                         if (pConfigStatusChar)
                         {
                             pConfigStatusChar->setValue("PIN_INVALID");
@@ -79,7 +69,7 @@ namespace plant_nanny::services::bluetooth
                     
                     if (!ssid.empty() && !pass.empty())
                     {
-                        log_info("[BLE] WiFi credentials received via write callback");
+                        LOG_INFO("[BLE] WiFi credentials received via write callback");
 
                         std::string mqttHost = pMqttHostChar ? pMqttHostChar->getValue() : "";
                         std::string mqttPortStr = pMqttPortChar ? pMqttPortChar->getValue() : "1883";
@@ -93,7 +83,7 @@ namespace plant_nanny::services::bluetooth
                             char mqttMsg[128];
                             snprintf(mqttMsg, sizeof(mqttMsg), "[BLE] MQTT config: %s:%d user=%s", 
                                 mqttHost.c_str(), mqttPort, mqttUsername.c_str());
-                            log_info(mqttMsg);
+                            LOG_INFO(mqttMsg);
                             g_pairingManager->onMqttConfigReceived(mqttHost, mqttPort, mqttUsername, mqttPassword);
                         }
                         
@@ -102,7 +92,7 @@ namespace plant_nanny::services::bluetooth
                     }
                     else
                     {
-                        log_info("[BLE] WiFi credentials incomplete");
+                        LOG_INFO("[BLE] WiFi credentials incomplete");
                     }
                 }
             }
@@ -122,7 +112,7 @@ namespace plant_nanny::services::bluetooth
 
         void onConnect(NimBLEServer* pServer, NimBLEConnInfo& connInfo) override
         {
-            log_info("[BLE] Device connected");
+            LOG_INFO("[BLE] Device connected");
             if (g_pairingManager && g_pairingManager->getState() == PairingState::ADVERTISING)
             {
                 g_pairingManager->setState(PairingState::AWAITING_PIN);
@@ -136,7 +126,7 @@ namespace plant_nanny::services::bluetooth
 
         void onDisconnect(NimBLEServer* pServer, NimBLEConnInfo& connInfo, int reason) override
         {
-            log_info("[BLE] Device disconnected");
+            LOG_INFO("[BLE] Device disconnected");
             if (g_pairingManager)
             {
                 auto state = g_pairingManager->getState();
@@ -152,7 +142,7 @@ namespace plant_nanny::services::bluetooth
 
         void onAuthenticationComplete(NimBLEConnInfo& connInfo) override
         {
-            log_info("[BLE] Authentication complete (app-level PIN used)");
+            LOG_INFO("[BLE] Authentication complete (app-level PIN used)");
         }
     };
 
@@ -262,7 +252,8 @@ namespace plant_nanny::services::bluetooth
             DEVICE_ID_CHAR_UUID,
             NIMBLE_PROPERTY::READ
         );
-        pDeviceIdChar->setValue("plantnanny-device");
+        // Use stored device ID if set, otherwise use placeholder
+        pDeviceIdChar->setValue(_deviceId.empty() ? "unknown" : _deviceId);
 
         pIpAddressChar = pConfigService->createCharacteristic(
             IP_ADDRESS_CHAR_UUID,
@@ -299,7 +290,7 @@ namespace plant_nanny::services::bluetooth
         pManufacturer->setValue(DEVICE_NAME);
         pDevInfoService->start();
 
-        log_info("[BLE] Services created");
+        LOG_INFO("[BLE] Services created");
     }
 
     common::patterns::Result<void> PairingManager::initialize()
@@ -316,7 +307,7 @@ namespace plant_nanny::services::bluetooth
         _initialized = true;
         _state = PairingState::IDLE;
 
-        log_info("[BLE] Pairing manager initialized");
+        LOG_INFO("[BLE] Pairing manager initialized");
 
         return common::patterns::Result<void>::success();
     }
@@ -337,7 +328,7 @@ namespace plant_nanny::services::bluetooth
         
         char msg[50];
         snprintf(msg, sizeof(msg), "[BLE] Starting pairing with PIN: %s", _currentPin.c_str());
-        log_info(msg);
+        LOG_INFO(msg);
 
         pServer = NimBLEDevice::createServer();
         
@@ -370,7 +361,7 @@ namespace plant_nanny::services::bluetooth
             _pinDisplayCallback(_currentPin);
         }
 
-        log_info("[BLE] Advertising started");
+        LOG_INFO("[BLE] Advertising started");
 
         return common::patterns::Result<std::string>::success(_currentPin);
     }
@@ -392,7 +383,7 @@ namespace plant_nanny::services::bluetooth
         _state = PairingState::IDLE;
         _currentPin = "";
 
-        log_info("[BLE] Pairing stopped");
+        LOG_INFO("[BLE] Pairing stopped");
 
         return common::patterns::Result<void>::success();
     }
@@ -406,7 +397,7 @@ namespace plant_nanny::services::bluetooth
 
         if (_pairingStartTime > 0 && (millis() - _pairingStartTime) > PAIRING_TIMEOUT_MS)
         {
-            log_info("[BLE] Pairing timeout");
+            LOG_INFO("[BLE] Pairing timeout");
             stopPairing();
             _state = PairingState::FAILED;
             
@@ -426,7 +417,7 @@ namespace plant_nanny::services::bluetooth
                 if (_state == PairingState::ADVERTISING || _state == PairingState::AWAITING_PIN)
                 {
                     _state = PairingState::AWAITING_WIFI_CONFIG;
-                    log_info("[BLE] Waiting for WiFi configuration");
+                    LOG_INFO("[BLE] Waiting for WiFi configuration");
                     scanWifiNetworks();
                     
                     if (pConfigStatusChar)
@@ -443,7 +434,7 @@ namespace plant_nanny::services::bluetooth
                     
                     if (!ssid.empty() && !pass.empty())
                     {
-                        log_info("[BLE] WiFi credentials received");
+                        LOG_INFO("[BLE] WiFi credentials received");
                         _state = PairingState::CONFIGURING_WIFI;
                         
                         std::string mqttHost = pMqttHostChar ? pMqttHostChar->getValue() : "";
@@ -486,7 +477,7 @@ namespace plant_nanny::services::bluetooth
             {
                 pConfigStatusChar->setValue("WIFI_CONFIGURED");
                 setState(PairingState::PAIRED);
-                log_info("[BLE] WiFi configuration successful");
+                LOG_INFO("[BLE] WiFi configuration successful");
                 if (pServer && pServer->getConnectedCount() > 0)
                 {
                     pConfigStatusChar->notify();
@@ -499,7 +490,7 @@ namespace plant_nanny::services::bluetooth
             else
             {
                 pConfigStatusChar->setValue("WIFI_FAILED");
-                log_info("[BLE] WiFi configuration failed");
+                LOG_INFO("[BLE] WiFi configuration failed");
                 if (pServer && pServer->getConnectedCount() > 0)
                 {
                     pConfigStatusChar->notify();
@@ -510,7 +501,7 @@ namespace plant_nanny::services::bluetooth
 
     void PairingManager::handleWifiCredentials(const std::string& ssid, const std::string& password)
     {
-        log_info("[BLE] Processing WiFi credentials");
+        LOG_INFO("[BLE] Processing WiFi credentials");
         _state = PairingState::CONFIGURING_WIFI;
         
         if (_wifiConfigCallback)
@@ -551,7 +542,7 @@ namespace plant_nanny::services::bluetooth
 
         _state = PairingState::IDLE;
 
-        log_info("[BLE] All bonds cleared");
+        LOG_INFO("[BLE] All bonds cleared");
 
         return common::patterns::Result<void>::success();
     }
@@ -568,8 +559,22 @@ namespace plant_nanny::services::bluetooth
             
             char msg[64];
             snprintf(msg, sizeof(msg), "[BLE] IP address set: %s", ipAddress.c_str());
-            log_info(msg);
+            LOG_INFO(msg);
         }
+    }
+
+    void PairingManager::setDeviceId(const std::string& deviceId)
+    {
+        _deviceId = deviceId;  // Store for use when services are created
+        
+        if (pDeviceIdChar)
+        {
+            pDeviceIdChar->setValue(deviceId);
+        }
+        
+        char msg[80];
+        snprintf(msg, sizeof(msg), "[BLE] Device ID set: %s", deviceId.c_str());
+        LOG_INFO(msg);
     }
 
     std::string PairingManager::getServerId() const
@@ -583,12 +588,12 @@ namespace plant_nanny::services::bluetooth
 
     void PairingManager::scanWifiNetworks()
     {
-        log_info("[BLE] Scanning for WiFi networks...");
+        LOG_INFO("[BLE] Scanning for WiFi networks...");
         int numNetworks = WiFi.scanNetworks(false, false, false, 300);
         
         if (numNetworks < 0)
         {
-            log_info("[BLE] WiFi scan failed");
+            LOG_INFO("[BLE] WiFi scan failed");
             if (pWifiNetworksChar)
             {
                 pWifiNetworksChar->setValue("[]");
@@ -598,7 +603,7 @@ namespace plant_nanny::services::bluetooth
 
         char msg[48];
         snprintf(msg, sizeof(msg), "[BLE] Found %d networks", numNetworks);
-        log_info(msg);
+        LOG_INFO(msg);
 
         std::string json = "[";
         int count = 0;
@@ -654,7 +659,7 @@ namespace plant_nanny::services::bluetooth
         if (pWifiNetworksChar)
         {
             pWifiNetworksChar->setValue(json);
-            log_info("[BLE] WiFi networks list updated");
+            LOG_INFO("[BLE] WiFi networks list updated");
         }
     }
 
