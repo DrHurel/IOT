@@ -7,14 +7,15 @@
 #include <string>
 #include <esp_event.h>
 
-// Services
-#include "libs/plant_nanny/services/button/ButtonHandler.h"
-#include "libs/plant_nanny/services/bluetooth/PairingManager.h"
-#include "libs/plant_nanny/services/captors/SensorManager.h"
-#include "libs/plant_nanny/services/config/ConfigManager.h"
-#include "libs/plant_nanny/services/mqtt/MQTTService.h"
-#include "libs/plant_nanny/services/network/Manager.h"
-#include "libs/plant_nanny/services/pump/Pump.h"
+// Service interfaces
+#include "libs/plant_nanny/services/ServiceContainer.h"
+#include "libs/plant_nanny/services/button/IButtonHandler.h"
+#include "libs/plant_nanny/services/bluetooth/IPairingManager.h"
+#include "libs/plant_nanny/services/captors/ISensorManager.h"
+#include "libs/plant_nanny/services/config/IConfigManager.h"
+#include "libs/plant_nanny/services/mqtt/IMQTTService.h"
+#include "libs/plant_nanny/services/network/INetworkService.h"
+#include "libs/plant_nanny/services/pump/IPump.h"
 
 // UI
 #include "libs/plant_nanny/ui/ScreenManager.h"
@@ -32,7 +33,6 @@
 
 namespace plant_nanny
 {
-    // Application event IDs
     enum AppEventId : int32_t {
         EVENT_WIFI_CONNECTED = 0,
         EVENT_WIFI_DISCONNECTED,
@@ -47,22 +47,21 @@ namespace plant_nanny
     };
 
     /**
-     * @brief Main application class - coordinates components
+     * @brief Main application class using dependency injection (SOLID principles)
+     * 
+     * - SRP: App coordinates components, doesn't create them
+     * - OCP: New services can be added without modifying App
+     * - LSP: Services can be replaced with any implementation of their interface
+     * - ISP: Each service interface is focused and minimal
+     * - DIP: App depends on abstractions (interfaces), not concrete implementations
      */
     class App : public common::App, public AppContext
     {
     private:
-        // Event system
         esp_event_loop_handle_t _event_loop;
 
-        // Services
-        services::button::ButtonHandler _buttonHandler;
-        services::bluetooth::PairingManager _pairingManager;
-        services::captors::SensorManager _sensorManager;
-        services::config::ConfigManager _configManager;
-        services::network::Manager _networkManager;
-        services::mqtt::MQTTService _mqttService;
-        services::pump::Pump _pump;
+        // Services (injected via ServiceContainer)
+        services::ServiceContainer _services;
         std::unique_ptr<PubSubClient> _mqtt_client;
         
         // UI
@@ -79,13 +78,22 @@ namespace plant_nanny
         // Initialization helpers
         void setupScreens();
         void setupStates();
-        void setupServices();
+        void setupServiceCallbacks();
         void setupSensors();
         void setupNetwork();
         void setupMqtt();
 
     public:
+        /**
+         * @brief Construct App with default services
+         */
         App();
+
+        /**
+         * @brief Construct App with injected services (for testing/customization)
+         */
+        explicit App(services::ServiceContainer services);
+
         ~App() noexcept override;
         App(App const &) noexcept = delete;
         App(App &&) noexcept = delete;
@@ -99,8 +107,8 @@ namespace plant_nanny
 
         // AppContext interface
         ui::ScreenManager& screenManager() override { return _screenManager; }
-        services::bluetooth::PairingManager& pairingManager() override { return _pairingManager; }
-        services::config::ConfigManager& configManager() override { return _configManager; }
+        services::bluetooth::IPairingManager& pairingManager() override { return *_services.pairingManager; }
+        services::config::IConfigManager& configManager() override { return *_services.configManager; }
         void setCurrentPin(const std::string& pin) override { _currentPin = pin; }
         const std::string& currentPin() const override { return _currentPin; }
         ui::screens::PairingScreen& pairingScreen() override { return *_pairingScreen; }
@@ -110,18 +118,16 @@ namespace plant_nanny
         void configure_wifi(const std::string &ssid, const std::string &password);
         bool is_network_connected() const;
 
-        // MQTT management
-        services::mqtt::MQTTService& mqttService() { return _mqttService; }
-
         // Pump control
-        void setPumpActive(bool active) { _pump.setActive(active); }
-        bool isPumpActive() const { return _pump.isActive(); }
+        void setPumpActive(bool active) { _services.pump->setActive(active); }
+        bool isPumpActive() const { return _services.pump->isActive(); }
 
         // OTA management
         common::patterns::Result<void> perform_ota_update(const std::string &firmware_url);
         
     private:
         void handleMqttCommand(const services::mqtt::Command& cmd);
+        void initEventLoop();
     };
 
 } // namespace plant_nanny

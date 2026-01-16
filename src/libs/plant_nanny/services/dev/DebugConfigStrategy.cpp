@@ -4,7 +4,7 @@
 namespace plant_nanny::services::dev
 {
 
-void DebugConfigStrategy::apply(config::ConfigManager& configManager)
+void DebugConfigStrategy::apply(config::IConfigManager& configManager)
 {
     Serial.println("[DEV] Development mode active");
     

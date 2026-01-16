@@ -1,6 +1,6 @@
 #pragma once
 
-#include "libs/plant_nanny/services/config/ConfigManager.h"
+#include "libs/plant_nanny/services/config/IConfigManager.h"
 #include "libs/plant_nanny/services/dev/IDevConfigStrategy.h"
 #include <memory>
 
@@ -30,7 +30,7 @@ namespace plant_nanny::services::dev
          * 
          * @param configManager Reference to the config manager
          */
-        static void apply(config::ConfigManager& configManager);
+        static void apply(config::IConfigManager& configManager);
         
         /**
          * @brief Check if running in development mode

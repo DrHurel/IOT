@@ -53,8 +53,9 @@ namespace plant_nanny::states
             auto result = context.pairingManager().startPairing();
             if (result.succeed())
             {
-                context.setCurrentPin(result.value());
-                context.pairingScreen().setPin(result.value());
+                std::string pin = context.pairingManager().getCurrentPin();
+                context.setCurrentPin(pin);
+                context.pairingScreen().setPin(pin);
                 context.screenManager().navigateTo("pairing");
                 
                 context.pairingManager().setPairingCompleteCallback([this](bool success) {

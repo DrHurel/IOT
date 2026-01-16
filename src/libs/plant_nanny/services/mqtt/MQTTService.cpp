@@ -44,8 +44,7 @@ namespace plant_nanny::services::mqtt
     common::patterns::Result<void> MQTTService::initialize(
         const std::string& device_id,
         const std::string& broker_host,
-        uint16_t broker_port,
-        bool use_new_topics)
+        uint16_t broker_port)
     {
         if (device_id.empty())
         {
@@ -62,7 +61,7 @@ namespace plant_nanny::services::mqtt
         device_id_ = device_id;
         broker_host_ = broker_host;
         broker_port_ = broker_port;
-        use_new_topic_structure_ = use_new_topics;
+        use_new_topic_structure_ = true;
 
         mqtt_client_.setServer(broker_host_.c_str(), broker_port_);
         mqtt_client_.setKeepAlive(60);
@@ -96,7 +95,7 @@ namespace plant_nanny::services::mqtt
         command_callback_ = callback;
     }
 
-    void MQTTService::set_publish_interval(uint32_t interval_ms)
+    void MQTTService::set_publish_interval(unsigned long interval_ms)
     {
         publish_interval_ms_ = (interval_ms < 1000) ? 1000 : interval_ms;
     }

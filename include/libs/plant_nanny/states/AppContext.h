@@ -1,8 +1,8 @@
 #pragma once
 
 #include "libs/plant_nanny/ui/ScreenManager.h"
-#include "libs/plant_nanny/services/bluetooth/PairingManager.h"
-#include "libs/plant_nanny/services/config/ConfigManager.h"
+#include "libs/plant_nanny/services/bluetooth/IPairingManager.h"
+#include "libs/plant_nanny/services/config/IConfigManager.h"
 #include "libs/plant_nanny/ui/screens/PairingScreen.h"
 #include <string>
 #include <functional>
@@ -23,8 +23,8 @@ namespace plant_nanny
         virtual ui::ScreenManager& screenManager() = 0;
         
         // Services access (DIP - depend on abstractions)
-        virtual services::bluetooth::PairingManager& pairingManager() = 0;
-        virtual services::config::ConfigManager& configManager() = 0;
+        virtual services::bluetooth::IPairingManager& pairingManager() = 0;
+        virtual services::config::IConfigManager& configManager() = 0;
         
         // State data
         virtual void setCurrentPin(const std::string& pin) = 0;

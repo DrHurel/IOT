@@ -1,5 +1,6 @@
 #pragma once
 
+#include "libs/plant_nanny/services/bluetooth/IPairingManager.h"
 #include "libs/common/patterns/Result.h"
 #include "libs/common/logger/Logger.h"
 #include "libs/common/service/Accessor.h"
@@ -21,18 +22,12 @@ namespace plant_nanny::services::bluetooth
         FAILED
     };
 
-    /**
-     * @brief WiFi credentials received via BLE
-     */
     struct WifiCredentials
     {
         std::string ssid;
         std::string password;
     };
 
-    /**
-     * @brief MQTT configuration received via BLE
-     */
     struct MqttConfig
     {
         std::string host;
@@ -47,7 +42,7 @@ namespace plant_nanny::services::bluetooth
     using MqttConfigCallback = std::function<void(const MqttConfig& config)>;
     using StateChangeCallback = std::function<void(PairingState newState)>;
 
-    class PairingManager
+    class PairingManager : public IPairingManager
     {
     private:
         PairingState _state;
@@ -91,136 +86,38 @@ namespace plant_nanny::services::bluetooth
         static constexpr const char* MQTT_PASSWORD_CHAR_UUID = "12345678-1234-5678-1234-56789abcdefc";
 
         PairingManager();
-        ~PairingManager();
+        ~PairingManager() override;
 
         PairingManager(const PairingManager&) = delete;
         PairingManager& operator=(const PairingManager&) = delete;
         PairingManager(PairingManager&&) = delete;
         PairingManager& operator=(PairingManager&&) = delete;
 
-        /**
-         * @brief Initialize the Bluetooth stack for pairing
-         */
-        common::patterns::Result<void> initialize();
+        // IPairingManager interface
+        common::patterns::Result<void> initialize() override;
+        common::patterns::Result<void> startPairing() override;
+        common::patterns::Result<void> stopPairing() override;
+        bool verifyPin(const std::string& pin) override { return pin == _currentPin; }
+        PairingState getState() const override { return _state; }
+        void setState(PairingState state) override;
+        void setDeviceId(const std::string& deviceId) override;
+        void setIpAddress(const std::string& ipAddress) override;
+        void notifyWifiConfigured(bool success) override;
+        void setPinDisplayCallback(PinDisplayCallback callback) override { _pinDisplayCallback = callback; }
+        void setPairingCompleteCallback(PairingCompleteCallback callback) override { _pairingCompleteCallback = callback; }
+        void setWifiConfigCallback(WifiConfigCallback callback) override { _wifiConfigCallback = callback; }
+        void setMqttConfigCallback(MqttConfigCallback callback) override { _mqttConfigCallback = callback; }
+        void setStateChangeCallback(StateChangeCallback callback) override { _stateChangeCallback = callback; }
 
-        /**
-         * @brief Start pairing mode - will generate PIN and start advertising
-         * @return Result with the generated PIN or error
-         */
-        common::patterns::Result<std::string> startPairing();
-
-        /**
-         * @brief Stop pairing mode
-         */
-        common::patterns::Result<void> stopPairing();
-
-        /**
-         * @brief Check and update pairing status - call in main loop
-         */
+        // Additional methods not in interface
         void update();
-
-        /**
-         * @brief Get current pairing state
-         */
-        PairingState getState() const { return _state; }
-
-        /**
-         * @brief Set pairing state and notify callback
-         */
-        void setState(PairingState state) 
-        { 
-            _state = state; 
-            if (_stateChangeCallback)
-            {
-                _stateChangeCallback(state);
-            }
-        }
-
-        /**
-         * @brief Get current PIN (only valid during pairing)
-         */
         const std::string& getCurrentPin() const { return _currentPin; }
-
-        /**
-         * @brief Verify PIN entered by user
-         * @return true if PIN matches, false otherwise
-         */
-        bool verifyPin(const std::string& pin) const { return pin == _currentPin; }
-
-        /**
-         * @brief Check if a device is currently paired
-         */
         bool isPaired() const { return _state == PairingState::PAIRED; }
-
-        /**
-         * @brief Set callback for PIN display
-         */
-        void setPinDisplayCallback(PinDisplayCallback callback) { _pinDisplayCallback = callback; }
-
-        /**
-         * @brief Set callback for pairing completion
-         */
-        void setPairingCompleteCallback(PairingCompleteCallback callback) { _pairingCompleteCallback = callback; }
-
-        /**
-         * @brief Set callback for WiFi configuration received
-         */
-        void setWifiConfigCallback(WifiConfigCallback callback) { _wifiConfigCallback = callback; }
-
-        /**
-         * @brief Set callback for MQTT configuration received
-         */
-        void setMqttConfigCallback(MqttConfigCallback callback) { _mqttConfigCallback = callback; }
-
-        /**
-         * @brief Set callback for state changes
-         */
-        void setStateChangeCallback(StateChangeCallback callback) { _stateChangeCallback = callback; }
-
-        /**
-         * @brief Handle WiFi credentials received via BLE
-         */
         void handleWifiCredentials(const std::string& ssid, const std::string& password);
-
-        /**
-         * @brief Notify that WiFi configuration was successful
-         */
-        void notifyWifiConfigured(bool success);
-
-        /**
-         * @brief Set the device ID to expose via BLE
-         * This should be called after getting/creating the device ID from ConfigManager
-         */
-        void setDeviceId(const std::string& deviceId);
-
-        /**
-         * @brief Set the IP address to expose via BLE after WiFi connects
-         */
-        void setIpAddress(const std::string& ipAddress);
-
-        /**
-         * @brief Get the server ID received from the app
-         */
         std::string getServerId() const;
-
-        /**
-         * @brief Scan for available WiFi networks and update BLE characteristic
-         */
         void scanWifiNetworks();
-
-        /**
-         * @brief Disconnect and unpair current device
-         */
         common::patterns::Result<void> unpair();
-
-        /**
-         * @brief Called when WiFi credentials are received via BLE
-         */
         void onWifiCredentialsReceived(const std::string& ssid, const std::string& password);
-
-        /**
-         * @brief Called when MQTT config is received via BLE
-         */
         void onMqttConfigReceived(const std::string& host, uint16_t port, 
                                   const std::string& username, const std::string& password);
     };

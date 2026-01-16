@@ -1,5 +1,6 @@
 #pragma once
 
+#include "libs/plant_nanny/services/mqtt/IMQTTService.h"
 #include "libs/common/patterns/Result.h"
 #include "libs/common/logger/Logger.h"
 #include "libs/common/service/Accessor.h"
@@ -10,9 +11,6 @@
 
 namespace plant_nanny::services::mqtt
 {
-    /**
-     * @brief Sensor reading data structure
-     */
     struct SensorReading
     {
         float temperatureC;
@@ -20,47 +18,26 @@ namespace plant_nanny::services::mqtt
         float luminosityPct;
     };
 
-    /**
-     * @brief Command types received from server
-     */
     enum class CommandType
     {
         Unknown,
-        SendNow,        // Force immediate sensor reading
-        PumpWater,      // Activate water pump
-        SetInterval,    // Change publish interval
-        Restart,        // Restart device
-        OtaUpdate       // Trigger OTA update
+        SendNow,
+        PumpWater,
+        SetInterval,
+        Restart,
+        OtaUpdate
     };
 
-    /**
-     * @brief Command received from server
-     */
     struct Command
     {
         CommandType type;
-        int durationMs;      // For pump_water
-        int amountMl;        // For pump_water
-        int intervalMs;      // For set_interval
-        std::string otaUrl;  // For ota_update
+        int durationMs;
+        int amountMl;
+        int intervalMs;
+        std::string otaUrl;
     };
 
-    /**
-     * @brief MQTT Service for publishing sensor data to PlantNanny server
-     *
-     * Handles connection management, reconnection logic, and periodic publishing
-     * of sensor readings to the MQTT broker.
-     *
-     * Topic structure (recommended architecture):
-     *   devices/{deviceId}/data     - ESP32 → Server (telemetry, JSON)
-     *   devices/{deviceId}/command  - Server → ESP32 (commands, JSON)
-     *   devices/{deviceId}/status   - Device status (online/offline via LWT)
-     *
-     * Legacy topics (for backward compatibility):
-     *   plantnanny/{deviceId}/sensors - Periodic sensor readings (JSON)
-     *   plantnanny/{deviceId}/status  - Device status (online/offline)
-     */
-    class MQTTService
+    class MQTTService : public IMQTTService
     {
     public:
         using ReadingCallback = std::function<SensorReading()>;
@@ -110,113 +87,34 @@ namespace plant_nanny::services::mqtt
 
     public:
         MQTTService();
-        ~MQTTService();
+        ~MQTTService() override;
 
         MQTTService(const MQTTService&) = delete;
         MQTTService& operator=(const MQTTService&) = delete;
         MQTTService(MQTTService&&) = delete;
         MQTTService& operator=(MQTTService&&) = delete;
 
-        /**
-         * @brief Initialize the MQTT service
-         * @param device_id Unique device identifier (MAC address recommended)
-         * @param broker_host MQTT broker hostname or IP
-         * @param broker_port MQTT broker port (default 1883)
-         * @param use_new_topics Use new topic structure (devices/<id>/data) if true
-         * @return Result indicating success or failure
-         */
+        // IMQTTService interface
         common::patterns::Result<void> initialize(
             const std::string& device_id,
             const std::string& broker_host,
-            uint16_t broker_port = 1883,
-            bool use_new_topics = true);
+            uint16_t broker_port = 1883) override;
 
-        /**
-         * @brief Set MQTT authentication credentials
-         * @param username MQTT username
-         * @param password MQTT password
-         */
-        void set_credentials(const std::string& username, const std::string& password);
+        void set_credentials(const std::string& username, const std::string& password) override;
+        void set_enabled(bool enabled) override;
+        void set_publish_interval(unsigned long intervalMs) override;
+        void set_reading_callback(ReadingCallback callback) override;
+        void set_command_callback(CommandCallback callback) override;
+        void update() override;
+        bool is_connected() const override;
 
-        /**
-         * @brief Set the callback to get current sensor readings
-         * @param callback Function that returns current SensorReading
-         */
-        void set_reading_callback(ReadingCallback callback);
-
-        /**
-         * @brief Set the callback for received commands from server
-         * @param callback Function called when command is received
-         */
-        void set_command_callback(CommandCallback callback);
-
-        /**
-         * @brief Set the publish interval for periodic updates
-         * @param interval_ms Interval in milliseconds (minimum 1000ms)
-         */
-        void set_publish_interval(uint32_t interval_ms);
-
-        /**
-         * @brief Enable or disable MQTT publishing
-         * @param enabled True to enable, false to disable
-         */
-        void set_enabled(bool enabled);
-
-        /**
-         * @brief Check if MQTT is enabled
-         * @return True if enabled
-         */
+        // Additional methods not in interface
         bool is_enabled() const { return enabled_; }
-
-        /**
-         * @brief Check if connected to MQTT broker
-         * @return True if connected
-         */
-        bool is_connected() const;
-
-        /**
-         * @brief Get the device ID
-         * @return Device ID string
-         */
         const std::string& get_device_id() const { return device_id_; }
-
-        /**
-         * @brief Connect to the MQTT broker
-         * @return Result indicating success or failure
-         */
         common::patterns::Result<void> connect();
-
-        /**
-         * @brief Disconnect from the MQTT broker
-         */
         void disconnect();
-
-        /**
-         * @brief Publish current sensor reading immediately
-         * @param reading Sensor reading to publish
-         * @return Result indicating success or failure
-         */
         common::patterns::Result<void> publish_reading(const SensorReading& reading);
-
-        /**
-         * @brief Force send sensor data immediately (triggered by send_now command)
-         */
         void force_send_reading();
-
-        /**
-         * @brief Main update loop - call this regularly from app loop
-         *
-         * Handles:
-         * - Connection maintenance and reconnection
-         * - Periodic sensor reading publishing
-         * - MQTT client loop processing (including incoming commands)
-         */
-        void update();
-
-        /**
-         * @brief Get the PubSubClient for external use (e.g., logging)
-         * @return Pointer to the PubSubClient
-         */
         PubSubClient* get_client() { return &mqtt_client_; }
     };
 

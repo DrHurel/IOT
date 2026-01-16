@@ -1,12 +1,12 @@
 #pragma once
 
+#include "libs/plant_nanny/services/button/IButtonHandler.h"
 #include "libs/common/patterns/Result.h"
 #include <functional>
 #include <cstdint>
 
-// LilyGo T-Display button pins
-#define BUTTON_LEFT_PIN 0    // GPIO 0 - Boot button (left)
-#define BUTTON_RIGHT_PIN 35  // GPIO 35 (right)
+#define BUTTON_LEFT_PIN 0
+#define BUTTON_RIGHT_PIN 35
 
 namespace plant_nanny::services::button
 {
@@ -21,7 +21,7 @@ namespace plant_nanny::services::button
 
     using ButtonCallback = std::function<void(ButtonEvent)>;
 
-    class ButtonHandler
+    class ButtonHandler : public IButtonHandler
     {
     private:
         ButtonCallback _callback;
@@ -38,28 +38,16 @@ namespace plant_nanny::services::button
 
     public:
         ButtonHandler();
-        ~ButtonHandler() = default;
+        ~ButtonHandler() override = default;
         
         ButtonHandler(const ButtonHandler &) = delete;
         ButtonHandler &operator=(const ButtonHandler &) = delete;
         ButtonHandler(ButtonHandler &&) = delete;
         ButtonHandler &operator=(ButtonHandler &&) = delete;
 
-        /**
-         * @brief Initialize button GPIOs
-         */
-        common::patterns::Result<void> initialize();
-
-        /**
-         * @brief Set callback for button events
-         */
-        void setCallback(ButtonCallback callback);
-
-        /**
-         * @brief Poll buttons - call this in the main loop
-         * @return ButtonEvent if any button event occurred
-         */
-        ButtonEvent poll();
+        common::patterns::Result<void> initialize() override;
+        void setCallback(ButtonCallback callback) override;
+        ButtonEvent poll() override;
 
         /**
          * @brief Check if left button is currently pressed

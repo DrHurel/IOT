@@ -12,15 +12,13 @@
 #include "libs/plant_nanny/states/ResettingState.h"
 #include "libs/plant_nanny/services/ota/UpdateOrchestrator.h"
 #include "libs/plant_nanny/services/dev/DevConfig.h"
+#include "libs/plant_nanny/services/ServiceFactory.h"
 
-// Define the event base for the application
 ESP_EVENT_DEFINE_BASE(common::APP_EVENTS);
 
 namespace plant_nanny
 {
-    App::App() : _event_loop(nullptr),
-        _mqtt_client(std::make_unique<PubSubClient>()),
-        _pairingScreen(std::make_shared<ui::screens::PairingScreen>())
+    void App::initEventLoop()
     {
         esp_event_loop_args_t loop_args = {
             .queue_size = 10,
@@ -30,6 +28,24 @@ namespace plant_nanny
             .task_core_id = tskNO_AFFINITY
         };
         esp_event_loop_create(&loop_args, &_event_loop);
+    }
+
+    App::App() 
+        : _event_loop(nullptr),
+          _services(services::ServiceFactory::createDefault()),
+          _mqtt_client(std::make_unique<PubSubClient>()),
+          _pairingScreen(std::make_shared<ui::screens::PairingScreen>())
+    {
+        initEventLoop();
+    }
+
+    App::App(services::ServiceContainer services)
+        : _event_loop(nullptr),
+          _services(std::move(services)),
+          _mqtt_client(std::make_unique<PubSubClient>()),
+          _pairingScreen(std::make_shared<ui::screens::PairingScreen>())
+    {
+        initEventLoop();
     }
 
     App::~App() noexcept
@@ -64,36 +80,31 @@ namespace plant_nanny
         _stateMachine.registerState(std::make_shared<states::ResettingState>());
     }
 
-    void App::setupServices()
+    void App::setupServiceCallbacks()
     {
-        _buttonHandler.initialize();
-        _buttonHandler.setCallback([this](services::button::ButtonEvent event) {
+        _services.buttonHandler->initialize();
+        _services.buttonHandler->setCallback([this](services::button::ButtonEvent event) {
             _stateMachine.handleButton(*this, event);
         });
         
-        _configManager.initialize();
-        _pairingManager.initialize();
+        _services.configManager->initialize();
+        _services.pairingManager->initialize();
         
-        // Set the device ID on the BLE characteristic so Flutter can read it
-        std::string deviceId = _configManager.getOrCreateDeviceId();
-        _pairingManager.setDeviceId(deviceId);
+        std::string deviceId = _services.configManager->getOrCreateDeviceId();
+        _services.pairingManager->setDeviceId(deviceId);
         
-        // Apply development configuration if in debug mode
-        services::dev::DevConfig::apply(_configManager);
+        services::dev::DevConfig::apply(*_services.configManager);
         
-        // Initialize pump on GPIO 13
-        _pump.initialize(13);
-        LOG_INFO("[APP] Pump initialized (GPIO 13)");
+        LOG_INFO("[APP] Pump initialized");
         
-        // Test pump LED
         Serial.println("[APP] Turning LED ON...");
-        _pump.activate();
+        _services.pump->activate();
         Serial.println("[APP] LED should be ON now, waiting 3s...");
         delay(3000);
-        _pump.deactivate();
+        _services.pump->deactivate();
         Serial.println("[APP] LED OFF");
 
-        _pairingManager.setStateChangeCallback([this](services::bluetooth::PairingState newState) {
+        _services.pairingManager->setStateChangeCallback([this](services::bluetooth::PairingState newState) {
             switch (newState)
             {
                 case services::bluetooth::PairingState::AWAITING_WIFI_CONFIG:
@@ -111,22 +122,22 @@ namespace plant_nanny
             }
         });
 
-        _pairingManager.setWifiConfigCallback([this](const services::bluetooth::WifiCredentials& creds) {
+        _services.pairingManager->setWifiConfigCallback([this](const services::bluetooth::WifiCredentials& creds) {
             LOG_INFO("[APP] WiFi credentials received via BLE");
-            _configManager.saveWifiCredentials(creds.ssid, creds.password);
-            _networkManager.set_credentials(creds.ssid, creds.password);
-            auto result = _networkManager.connect();
-            _pairingManager.notifyWifiConfigured(result.succeed());
+            _services.configManager->saveWifiCredentials(creds.ssid, creds.password);
+            _services.networkManager->set_credentials(creds.ssid, creds.password);
+            auto result = _services.networkManager->connect();
+            _services.pairingManager->notifyWifiConfigured(result.succeed());
             
             if (result.succeed())
             {
                 LOG_INFO("[APP] WiFi connected via BLE config");
-                _configManager.setConfigured(true);
+                _services.configManager->setConfigured(true);
 
-                auto ipResult = _networkManager.get_ip_address();
+                auto ipResult = _services.networkManager->get_ip_address();
                 if (ipResult.succeed())
                 {
-                    _pairingManager.setIpAddress(ipResult.value());
+                    _services.pairingManager->setIpAddress(ipResult.value());
                 }
 
                 setupMqtt();
@@ -136,48 +147,41 @@ namespace plant_nanny
                 LOG_INFO("[APP] WiFi connection failed - showing error screen");
                 _screenManager.navigateTo("wifi_error");
                 _screenManager.render();
-                _pairingManager.setState(services::bluetooth::PairingState::AWAITING_WIFI_CONFIG);
+                _services.pairingManager->setState(services::bluetooth::PairingState::AWAITING_WIFI_CONFIG);
             }
         });
 
-        _pairingManager.setMqttConfigCallback([this](const services::bluetooth::MqttConfig& config) {
+        _services.pairingManager->setMqttConfigCallback([this](const services::bluetooth::MqttConfig& config) {
             LOG_INFO("[APP] MQTT config received via BLE");
-            _configManager.saveMqttConfig(config.host, config.port);
+            _services.configManager->saveMqttConfig(config.host, config.port);
             
             if (!config.username.empty())
             {
-                _configManager.saveMqttCredentials(config.username, config.password);
+                _services.configManager->saveMqttCredentials(config.username, config.password);
             }
         });
     }
 
     void App::setupSensors()
     {
-        // Configure sensor pins:
-        // - Thermistor (thermal resistance) on pin 33
-        // - LDR (light-sensitive resistance) on pin 37  
-        // - Transistor power control on pin 26
         services::captors::SensorPins pins;
         pins.thermistorPin = 33;
         pins.ldrPin = 37;
         pins.powerPin = 26;
         
-        _sensorManager.initialize(pins);
+        _services.sensorManager->initialize(pins);
         
-        // Configure thermistor parameters (adjust based on your specific thermistor)
-        // Common 10K NTC thermistor with B=3950
         services::captors::temperature::ThermistorConfig thermConfig;
-        thermConfig.nominalResistance = 10000.0f;   // 10K ohms at 25°C
-        thermConfig.nominalTemperature = 25.0f;     // 25°C reference
-        thermConfig.betaCoefficient = 3950.0f;      // Beta coefficient
-        thermConfig.seriesResistance = 5600.0f;     // 5.6K series resistor
+        thermConfig.nominalResistance = 10000.0f;
+        thermConfig.nominalTemperature = 25.0f;
+        thermConfig.betaCoefficient = 3950.0f;
+        thermConfig.seriesResistance = 5600.0f;
         
-        _sensorManager.configureThermistor(thermConfig);
+        _services.sensorManager->configureThermistor(thermConfig);
         
         LOG_INFO("[APP] Sensors initialized (Thermistor:33, LDR:37, Power:26)");
         
-        // Test read sensors on startup
-        auto testData = _sensorManager.read();
+        auto testData = _services.sensorManager->read();
         if (testData.valid)
         {
             Serial.printf("[APP] Sensor test: Temp=%.1fC Light=%.1f%%\n", 
@@ -191,13 +195,13 @@ namespace plant_nanny
 
     void App::setupNetwork()
     {
-        auto ssidResult = _configManager.getWifiSsid();
-        auto passResult = _configManager.getWifiPassword();
+        auto ssidResult = _services.configManager->getWifiSsid();
+        auto passResult = _services.configManager->getWifiPassword();
         
         if (ssidResult.succeed() && !ssidResult.value().empty())
         {
-            _networkManager.set_credentials(ssidResult.value(), passResult.value());
-            auto connectResult = _networkManager.connect();
+            _services.networkManager->set_credentials(ssidResult.value(), passResult.value());
+            auto connectResult = _services.networkManager->connect();
             if (connectResult.succeed())
             {
                 LOG_INFO("[APP] WiFi connected");
@@ -211,43 +215,43 @@ namespace plant_nanny
 
     void App::setupMqtt()
     {
-        if (!_configManager.isMqttConfigured())
+        if (!_services.configManager->isMqttConfigured())
         {
             LOG_INFO("[APP] MQTT not configured, skipping");
             return;
         }
         
-        auto hostResult = _configManager.getMqttHost();
+        auto hostResult = _services.configManager->getMqttHost();
         if (!hostResult.succeed())
         {
             return;
         }
         
-        std::string deviceId = _configManager.getOrCreateDeviceId();
-        uint16_t port = _configManager.getMqttPort();
+        std::string deviceId = _services.configManager->getOrCreateDeviceId();
+        uint16_t port = _services.configManager->getMqttPort();
         
-        auto initResult = _mqttService.initialize(deviceId, hostResult.value(), port);
+        auto initResult = _services.mqttService->initialize(deviceId, hostResult.value(), port);
         if (!initResult.succeed())
         {
             LOG_INFO("[APP] MQTT init failed");
             return;
         }
 
-        auto userResult = _configManager.getMqttUsername();
-        auto passResult = _configManager.getMqttPassword();
+        auto userResult = _services.configManager->getMqttUsername();
+        auto passResult = _services.configManager->getMqttPassword();
         if (userResult.succeed() && !userResult.value().empty())
         {
-            _mqttService.set_credentials(userResult.value(), passResult.value());
+            _services.mqttService->set_credentials(userResult.value(), passResult.value());
         }
         
-        _mqttService.set_reading_callback([this]() {
+        _services.mqttService->set_reading_callback([this]() {
             services::mqtt::SensorReading reading;
-            auto sensorData = _sensorManager.read();
+            auto sensorData = _services.sensorManager->read();
             if (sensorData.valid)
             {
                 reading.temperatureC = sensorData.temperatureC;
                 reading.luminosityPct = sensorData.luminosityPct;
-                reading.humidityPct = 0.0f;  // No humidity sensor connected
+                reading.humidityPct = 0.0f;
             }
             else
             {
@@ -258,12 +262,12 @@ namespace plant_nanny
             return reading;
         });
 
-        _mqttService.set_command_callback([this](const services::mqtt::Command& cmd) {
+        _services.mqttService->set_command_callback([this](const services::mqtt::Command& cmd) {
             handleMqttCommand(cmd);
         });
         
-        _mqttService.set_publish_interval(60000);
-        _mqttService.set_enabled(true);
+        _services.mqttService->set_publish_interval(60000);
+        _services.mqttService->set_enabled(true);
         
         LOG_INFO("[APP] MQTT service configured");
     }
@@ -272,17 +276,13 @@ namespace plant_nanny
     {
         Serial.begin(115200);
         common::service::DefaultRegistry::create();
-        
-        // Use factory to register appropriate logger for build configuration
-        // This follows SOLID: the factory encapsulates build-specific logic
         common::logger::LoggerFactory::registerLogger();
 
         setupScreens();
         setupStates();
-        setupServices();
+        setupServiceCallbacks();
         setupSensors();
         
-        // Show splash screen
         _screenManager.navigateTo("splash");
         delay(1500);
 
@@ -294,10 +294,10 @@ namespace plant_nanny
 
     void App::run()
     {
-        _buttonHandler.poll();
+        _services.buttonHandler->poll();
         _stateMachine.update(*this);
-        _networkManager.maintain_connection();
-        _mqttService.update();
+        _services.networkManager->maintain_connection();
+        _services.mqttService->update();
 
         if (!_pendingTransition.empty())
         {
@@ -316,13 +316,13 @@ namespace plant_nanny
 
     void App::configure_wifi(const std::string &ssid, const std::string &password)
     {
-        _networkManager.set_credentials(ssid, password);
-        _configManager.saveWifiCredentials(ssid, password);
+        _services.networkManager->set_credentials(ssid, password);
+        _services.configManager->saveWifiCredentials(ssid, password);
     }
 
     bool App::is_network_connected() const
     {
-        return _networkManager.is_connected();
+        return _services.networkManager->is_connected();
     }
 
     common::patterns::Result<void> App::perform_ota_update(const std::string &firmware_url)
@@ -367,10 +367,9 @@ namespace plant_nanny
                     snprintf(msg, sizeof(msg), "[APP] Pump water command received (%dms)", cmd.durationMs);
                     LOG_INFO(msg);
                     
-                    // Activate pump for the requested duration
-                    _pump.activate();
-                    delay(cmd.durationMs > 0 ? cmd.durationMs : 5000);  // Default 5s if not specified
-                    _pump.deactivate();
+                    _services.pump->activate();
+                    delay(cmd.durationMs > 0 ? cmd.durationMs : 5000);
+                    _services.pump->deactivate();
                     
                     LOG_INFO("[APP] Pump water completed");
                 }

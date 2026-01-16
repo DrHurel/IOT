@@ -13,7 +13,7 @@ namespace plant_nanny::services::dev
     class DebugConfigStrategy : public IDevConfigStrategy
     {
     public:
-        void apply(config::ConfigManager& configManager) override;
+        void apply(config::IConfigManager& configManager) override;
         void logStatus() const override;
         
         bool isDevMode() const override

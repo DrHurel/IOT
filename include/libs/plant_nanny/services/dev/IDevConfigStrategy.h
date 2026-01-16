@@ -1,6 +1,6 @@
 #pragma once
 
-#include "libs/plant_nanny/services/config/ConfigManager.h"
+#include "libs/plant_nanny/services/config/IConfigManager.h"
 
 namespace plant_nanny::services::dev
 {
@@ -19,7 +19,7 @@ namespace plant_nanny::services::dev
          * @brief Apply development configuration
          * @param configManager Reference to the config manager
          */
-        virtual void apply(config::ConfigManager& configManager) = 0;
+        virtual void apply(config::IConfigManager& configManager) = 0;
         
         /**
          * @brief Log the current configuration status

@@ -13,7 +13,7 @@ namespace plant_nanny::services::dev
     class ReleaseConfigStrategy : public IDevConfigStrategy
     {
     public:
-        void apply([[maybe_unused]] config::ConfigManager& configManager) override
+        void apply([[maybe_unused]] config::IConfigManager& configManager) override
         {
             // No-op in release builds
         }

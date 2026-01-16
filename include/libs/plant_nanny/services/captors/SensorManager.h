@@ -1,40 +1,13 @@
 #pragma once
 
+#include "libs/plant_nanny/services/captors/ISensorManager.h"
 #include "libs/plant_nanny/services/captors/temperature/Temperature.h"
 #include "libs/plant_nanny/services/captors/luminosity/Luminosity.h"
 #include "libs/plant_nanny/services/captors/humidity/Humidity.h"
 
 namespace plant_nanny::services::captors
 {
-    /**
-     * @brief Sensor reading data structure
-     */
-    struct SensorData
-    {
-        float temperatureC = 0.0f;
-        float luminosityPct = 0.0f;
-        float humidityPct = 0.0f;
-        bool valid = false;
-    };
-
-    /**
-     * @brief Pin configuration for sensors
-     */
-    struct SensorPins
-    {
-        uint8_t thermistorPin = 33;     // ADC pin for thermal resistance
-        uint8_t ldrPin = 36;            // ADC pin for light-dependent resistance
-        uint8_t humidityPin = 32;       // ADC pin for soil humidity captor
-        uint8_t powerPin = 26;          // Transistor control pin to power sensors
-    };
-
-    /**
-     * @brief Manages temperature and luminosity sensors
-     * 
-     * Wrapper around Temperature and Luminosity classes for convenience.
-     * Both sensors share the same power control pin.
-     */
-    class SensorManager
+    class SensorManager : public ISensorManager
     {
     private:
         temperature::Temperature _temperature;
@@ -45,32 +18,17 @@ namespace plant_nanny::services::captors
 
     public:
         SensorManager() = default;
-        ~SensorManager() = default;
+        ~SensorManager() override = default;
         
         SensorManager(const SensorManager&) = delete;
         SensorManager(SensorManager&&) = delete;
         SensorManager& operator=(const SensorManager&) = delete;
         SensorManager& operator=(SensorManager&&) = delete;
-        
-        /**
-         * @brief Initialize with default pins
-         */
-        void initialize();
-        
-        /**
-         * @brief Initialize with custom pins
-         */
-        void initialize(const SensorPins& pins);
-        
-        /**
-         * @brief Configure thermistor parameters
-         */
-        void configureThermistor(const temperature::ThermistorConfig& config);
-        
-        /**
-         * @brief Read all sensors
-         */
-        SensorData read();
+
+        void initialize() override;
+        void initialize(const SensorPins& pins) override;
+        void configureThermistor(const temperature::ThermistorConfig& config) override;
+        SensorData read() override;
         
         /**
          * @brief Access temperature sensor directly

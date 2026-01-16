@@ -14,7 +14,7 @@ std::unique_ptr<IDevConfigStrategy> DevConfig::createStrategy()
 #endif
 }
 
-void DevConfig::apply(config::ConfigManager& configManager)
+void DevConfig::apply(config::IConfigManager& configManager)
 {
     auto strategy = createStrategy();
     strategy->apply(configManager);

@@ -1,5 +1,6 @@
 #pragma once
 
+#include "libs/plant_nanny/services/pump/IPump.h"
 #include <cstdint>
 
 namespace plant_nanny::services::pump
@@ -10,48 +11,21 @@ namespace plant_nanny::services::pump
      * The pump is controlled via a transistor connected to a GPIO pin.
      * HIGH activates the pump, LOW deactivates it.
      */
-    class Pump
+    class Pump : public IPump
     {
     private:
-        uint8_t _controlPin = 0;
-        bool _initialized = false;
+        uint8_t _controlPin;
         bool _active = false;
 
     public:
-        Pump() = default;
-        ~Pump() = default;
+        explicit Pump(uint8_t controlPin);
+        ~Pump() override = default;
 
-        /**
-         * @brief Initialize the pump controller
-         * @param controlPin GPIO pin connected to transistor base
-         */
-        void initialize(uint8_t controlPin);
-
-        /**
-         * @brief Turn the pump ON
-         */
-        void activate();
-
-        /**
-         * @brief Turn the pump OFF
-         */
-        void deactivate();
-
-        /**
-         * @brief Toggle pump state
-         */
-        void toggle();
-
-        /**
-         * @brief Check if pump is currently active
-         */
-        bool isActive() const { return _active; }
-
-        /**
-         * @brief Set pump state
-         * @param active true to activate, false to deactivate
-         */
-        void setActive(bool active);
+        void activate() override;
+        void deactivate() override;
+        void toggle() override;
+        bool isActive() const override { return _active; }
+        void setActive(bool active) override;
     };
 
 } // namespace plant_nanny::services::pump

@@ -190,6 +190,15 @@ namespace plant_nanny::services::bluetooth
         }
     }
 
+    void PairingManager::setState(PairingState state)
+    {
+        _state = state;
+        if (_stateChangeCallback)
+        {
+            _stateChangeCallback(state);
+        }
+    }
+
     std::string PairingManager::generatePin()
     {
         uint32_t pin = 100000 + (esp_random() % 900000);
@@ -312,14 +321,14 @@ namespace plant_nanny::services::bluetooth
         return common::patterns::Result<void>::success();
     }
 
-    common::patterns::Result<std::string> PairingManager::startPairing()
+    common::patterns::Result<void> PairingManager::startPairing()
     {
         if (!_initialized)
         {
             auto initResult = initialize();
             if (!initResult.succeed())
             {
-                return common::patterns::Result<std::string>::failure(initResult.error());
+                return common::patterns::Result<void>::failure(initResult.error());
             }
         }
 
@@ -363,7 +372,7 @@ namespace plant_nanny::services::bluetooth
 
         LOG_INFO("[BLE] Advertising started");
 
-        return common::patterns::Result<std::string>::success(_currentPin);
+        return common::patterns::Result<void>::success();
     }
 
     common::patterns::Result<void> PairingManager::stopPairing()

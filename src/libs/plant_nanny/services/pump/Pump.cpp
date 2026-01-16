@@ -4,27 +4,20 @@
 namespace plant_nanny::services::pump
 {
 
-void Pump::initialize(uint8_t controlPin)
+Pump::Pump(uint8_t controlPin) : _controlPin(controlPin), _active(false)
 {
-    _controlPin = controlPin;
     pinMode(_controlPin, OUTPUT);
     digitalWrite(_controlPin, LOW);
-    _active = false;
-    _initialized = true;
 }
 
 void Pump::activate()
 {
-    if (!_initialized) return;
-    
     digitalWrite(_controlPin, HIGH);
     _active = true;
 }
 
 void Pump::deactivate()
 {
-    if (!_initialized) return;
-    
     digitalWrite(_controlPin, LOW);
     _active = false;
 }
