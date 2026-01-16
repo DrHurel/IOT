@@ -21,6 +21,7 @@ void SensorManager::initialize(const SensorPins& pins)
     // Initialize sensors WITHOUT power control (we manage it here)
     _temperature.initialize(_pins.thermistorPin);
     _luminosity.initialize(_pins.ldrPin);
+    _humidity.initialize(_pins.humidityPin);
     
     _initialized = true;
 }
@@ -44,14 +45,15 @@ SensorData SensorManager::read()
     digitalWrite(_pins.powerPin, HIGH);
     delay(50);  // Warm-up time
     
-    // Read both sensors
+    // Read all sensors
     data.temperatureC = _temperature.read();
     data.luminosityPct = _luminosity.read();
+    data.humidityPct = _humidity.read();
     
     // Power off sensors
     digitalWrite(_pins.powerPin, LOW);
     
-    data.valid = !std::isnan(data.temperatureC) || !std::isnan(data.luminosityPct);
+    data.valid = !std::isnan(data.temperatureC) || !std::isnan(data.luminosityPct) || !std::isnan(data.humidityPct);
     
     return data;
 }

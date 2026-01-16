@@ -2,6 +2,7 @@
 
 #include "libs/plant_nanny/services/captors/temperature/Temperature.h"
 #include "libs/plant_nanny/services/captors/luminosity/Luminosity.h"
+#include "libs/plant_nanny/services/captors/humidity/Humidity.h"
 
 namespace plant_nanny::services::captors
 {
@@ -12,6 +13,7 @@ namespace plant_nanny::services::captors
     {
         float temperatureC = 0.0f;
         float luminosityPct = 0.0f;
+        float humidityPct = 0.0f;
         bool valid = false;
     };
 
@@ -22,6 +24,7 @@ namespace plant_nanny::services::captors
     {
         uint8_t thermistorPin = 33;     // ADC pin for thermal resistance
         uint8_t ldrPin = 36;            // ADC pin for light-dependent resistance
+        uint8_t humidityPin = 32;       // ADC pin for soil humidity captor
         uint8_t powerPin = 26;          // Transistor control pin to power sensors
     };
 
@@ -36,6 +39,7 @@ namespace plant_nanny::services::captors
     private:
         temperature::Temperature _temperature;
         luminosity::Luminosity _luminosity;
+        humidity::Humidity _humidity;
         SensorPins _pins;
         bool _initialized = false;
 
@@ -77,6 +81,11 @@ namespace plant_nanny::services::captors
          * @brief Access luminosity sensor directly
          */
         luminosity::Luminosity& luminosity() { return _luminosity; }
+        
+        /**
+         * @brief Access humidity sensor directly
+         */
+        humidity::Humidity& humidity() { return _humidity; }
         
         bool isInitialized() const { return _initialized; }
     };
