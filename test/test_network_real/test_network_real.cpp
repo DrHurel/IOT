@@ -3,6 +3,10 @@
 #include <fstream>
 #include <string>
 
+#ifndef NATIVE_TEST
+#include <Arduino.h>
+#endif
+
 bool load_wifi_credentials(std::string &ssid, std::string &password)
 {
 #ifdef NATIVE_TEST

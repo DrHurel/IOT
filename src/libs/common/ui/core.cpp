@@ -58,7 +58,7 @@ namespace common::ui
 
     TFT_eSPI &get_display()
     {
-        const auto *test_display = get_test_display_ptr();
+        auto *test_display = const_cast<testing::mocks::MockDisplay*>(get_test_display_ptr());
         if (test_display)
         {
             return *reinterpret_cast<TFT_eSPI *>(test_display);

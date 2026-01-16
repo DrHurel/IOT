@@ -7,6 +7,11 @@
 #include <fstream>
 #include <cstdlib>
 
+#ifndef NATIVE_TEST
+#include <Arduino.h>
+#include <WiFi.h>
+#endif
+
 namespace testing::mocks
 {
     struct MockNetworkConfig
