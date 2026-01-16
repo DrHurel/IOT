@@ -1,6 +1,7 @@
 #pragma once
 
 #include <libs/common/App.h>
+#include <libs/common/service/Registry.h>
 #include <memory>
 #include <PubSubClient.h>
 #include "libs/common/patterns/Result.h"
@@ -8,12 +9,12 @@
 #include <esp_event.h>
 
 // Service interfaces
-#include "libs/plant_nanny/services/ServiceContainer.h"
 #include "libs/plant_nanny/services/button/IButtonHandler.h"
 #include "libs/plant_nanny/services/bluetooth/IPairingManager.h"
 #include "libs/plant_nanny/services/captors/ISensorManager.h"
 #include "libs/plant_nanny/services/config/IConfigManager.h"
 #include "libs/plant_nanny/services/mqtt/IMQTTService.h"
+#include "libs/plant_nanny/services/mqtt/IMqttCommandHandler.h"
 #include "libs/plant_nanny/services/network/INetworkService.h"
 #include "libs/plant_nanny/services/pump/IPump.h"
 
@@ -59,9 +60,7 @@ namespace plant_nanny
     {
     private:
         esp_event_loop_handle_t _event_loop;
-
-        // Services (injected via ServiceContainer)
-        services::ServiceContainer _services;
+        
         std::unique_ptr<PubSubClient> _mqtt_client;
         
         // UI
@@ -85,14 +84,9 @@ namespace plant_nanny
 
     public:
         /**
-         * @brief Construct App with default services
+         * @brief Construct App (services are accessed via registry)
          */
         App();
-
-        /**
-         * @brief Construct App with injected services (for testing/customization)
-         */
-        explicit App(services::ServiceContainer services);
 
         ~App() noexcept override;
         App(App const &) noexcept = delete;
@@ -107,8 +101,8 @@ namespace plant_nanny
 
         // AppContext interface
         ui::ScreenManager& screenManager() override { return _screenManager; }
-        services::bluetooth::IPairingManager& pairingManager() override { return *_services.pairingManager; }
-        services::config::IConfigManager& configManager() override { return *_services.configManager; }
+        services::bluetooth::IPairingManager& pairingManager() override;
+        services::config::IConfigManager& configManager() override;
         void setCurrentPin(const std::string& pin) override { _currentPin = pin; }
         const std::string& currentPin() const override { return _currentPin; }
         ui::screens::PairingScreen& pairingScreen() override { return *_pairingScreen; }
@@ -119,14 +113,13 @@ namespace plant_nanny
         bool is_network_connected() const;
 
         // Pump control
-        void setPumpActive(bool active) { _services.pump->setActive(active); }
-        bool isPumpActive() const { return _services.pump->isActive(); }
+        void setPumpActive(bool active);
+        bool isPumpActive() const;
 
         // OTA management
         common::patterns::Result<void> perform_ota_update(const std::string &firmware_url);
         
     private:
-        void handleMqttCommand(const services::mqtt::Command& cmd);
         void initEventLoop();
     };
 
