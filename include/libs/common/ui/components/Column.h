@@ -32,7 +32,7 @@ namespace common::ui::components
         int _spacing;
 
     public:
-        Column(MainAxisAlignment mainAlign = MainAxisAlignment::START,
+        explicit Column(MainAxisAlignment mainAlign = MainAxisAlignment::START,
                CrossAxisAlignment crossAlign = CrossAxisAlignment::START,
                int spacing = 0);
         ~Column();

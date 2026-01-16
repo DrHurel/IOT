@@ -58,7 +58,7 @@ namespace testing::mocks
         void drawCharacter(char c, int x, int y, uint16_t color, int size);
 
     public:
-        MockDisplay(int width = 135, int height = 240);
+        explicit MockDisplay(int width = 135, int height = 240);
 
         // Override TFT_eSPI methods to capture operations and render pixels
         void fillRect(int x, int y, int w, int h, uint16_t color);

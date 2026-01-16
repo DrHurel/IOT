@@ -22,7 +22,7 @@ namespace common::ui::components
         bool _underline;
 
     public:
-        Text(const std::string &text, int fontSize = 2, Align align = Align::LEFT,
+        explicit Text(const std::string &text, int fontSize = 2, Align align = Align::LEFT,
              bool bold = false, bool italic = false, bool underline = false);
         ~Text();
 

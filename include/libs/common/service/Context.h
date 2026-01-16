@@ -20,7 +20,7 @@ namespace common::service
         friend class RegistryImp;
 
     public:
-        Context(std::string_view name) noexcept;
+        explicit Context(std::string_view name) noexcept;
         ~Context() noexcept = default;
         Context(Context const &) noexcept = delete;
         Context(Context &&) noexcept = default;

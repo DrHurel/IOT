@@ -33,7 +33,7 @@ namespace common::service
         {
             if (!owned_)
             {
-                instance_.release();
+                (void)instance_.release();
             }
         }
 

@@ -38,7 +38,7 @@ namespace common::ui
         bool _underline;
 
     public:
-        TextBuilder(const std::string &text);
+        explicit TextBuilder(const std::string &text);
 
         TextBuilder &fontSize(int size);
         TextBuilder &align(components::Align alignment);

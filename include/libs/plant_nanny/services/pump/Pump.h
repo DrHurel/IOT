@@ -13,7 +13,7 @@ namespace plant_nanny::services::pump
     class Pump
     {
     private:
-        uint8_t _controlPin;
+        uint8_t _controlPin = 0;
         bool _initialized = false;
         bool _active = false;
 

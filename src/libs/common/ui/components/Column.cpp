@@ -28,7 +28,6 @@ namespace common::ui::components
         _width = availableWidth;
         _height = availableHeight;
 
-        // Measure all children
         int totalHeight = 0;
         int maxWidth = 0;
 
@@ -42,13 +41,11 @@ namespace common::ui::components
             }
         }
 
-        // Add spacing between children
         if (_children.size() > 1)
         {
             totalHeight += _spacing * (_children.size() - 1);
         }
 
-        // Column takes the minimum of available height and total children height
         _height = std::min(totalHeight, availableHeight);
     }
 
@@ -62,10 +59,9 @@ namespace common::ui::components
             return;
         }
 
-        // Calculate total height of visible children
         int totalChildHeight = 0;
         int visibleCount = 0;
-        for (auto &child : _children)
+        for (const auto &child : _children)
         {
             if (child && child->isVisible())
             {
@@ -74,13 +70,11 @@ namespace common::ui::components
             }
         }
 
-        // Add spacing
         if (visibleCount > 1)
         {
             totalChildHeight += _spacing * (visibleCount - 1);
         }
 
-        // Calculate starting Y position based on main axis alignment
         int currentY = y;
         int extraSpace = _height - totalChildHeight;
 
@@ -120,7 +114,6 @@ namespace common::ui::components
             break;
         }
 
-        // Layout each child
         for (auto &child : _children)
         {
             if (child && child->isVisible())
@@ -128,7 +121,6 @@ namespace common::ui::components
                 int childX = x;
                 int childWidth = child->getWidth();
 
-                // Apply cross axis alignment
                 switch (_crossAxisAlignment)
                 {
                 case CrossAxisAlignment::START:
@@ -159,13 +151,11 @@ namespace common::ui::components
             return common::patterns::Result<void>::success();
         }
 
-        // Render background if set
         if (_backgroundColor != Color::Black)
         {
             context.display.fillRect(_x, _y, _width, _height, static_cast<uint16_t>(_backgroundColor));
         }
 
-        // Render all children
         for (auto &child : _children)
         {
             if (child && child->isVisible())

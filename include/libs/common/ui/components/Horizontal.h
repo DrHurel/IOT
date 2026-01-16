@@ -15,7 +15,7 @@ namespace common::ui::components
         int _spacing;
 
     public:
-        Horizontal(MainAxisAlignment mainAlign = MainAxisAlignment::START,
+        explicit Horizontal(MainAxisAlignment mainAlign = MainAxisAlignment::START,
                    CrossAxisAlignment crossAlign = CrossAxisAlignment::START,
                    int spacing = 0);
         ~Horizontal();

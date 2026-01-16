@@ -89,8 +89,6 @@ namespace plant_nanny
         ~App() noexcept override;
         App(App const &) noexcept = delete;
         App(App &&) noexcept = delete;
-        App &operator=(App const &) noexcept = delete;
-        App &operator=(App &&) noexcept = delete;
 
         // common::App interface
         void initialize() override;

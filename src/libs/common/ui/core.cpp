@@ -21,7 +21,7 @@ namespace common::ui
 
     void bootstrap()
     {
-        auto *test_display = get_test_display_ptr();
+        const auto *test_display = get_test_display_ptr();
         if (!test_display && !fallback_display)
         {
             fallback_display = new testing::mocks::MockDisplay();
@@ -30,7 +30,7 @@ namespace common::ui
 
     int get_screen_width()
     {
-        auto *test_display = get_test_display_ptr();
+        const auto *test_display = get_test_display_ptr();
         if (test_display)
         {
             return test_display->width();
@@ -44,7 +44,7 @@ namespace common::ui
 
     int get_screen_height()
     {
-        auto *test_display = get_test_display_ptr();
+        const auto *test_display = get_test_display_ptr();
         if (test_display)
         {
             return test_display->height();
@@ -58,7 +58,7 @@ namespace common::ui
 
     TFT_eSPI &get_display()
     {
-        auto *test_display = get_test_display_ptr();
+        const auto *test_display = get_test_display_ptr();
         if (test_display)
         {
             return *reinterpret_cast<TFT_eSPI *>(test_display);

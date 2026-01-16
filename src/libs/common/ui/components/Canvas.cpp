@@ -3,7 +3,6 @@
 
 namespace common::ui::components
 {
-    // Canvas implementation (drawing component)
     Canvas::Canvas() : _drawCallback(nullptr)
     {
     }
@@ -28,13 +27,11 @@ namespace common::ui::components
             return common::patterns::Result<void>::success();
         }
 
-        // Fill background if set
         if (_backgroundColor != Color::Black)
         {
             context.display.fillRect(_x, _y, _width, _height, static_cast<uint16_t>(_backgroundColor));
         }
 
-        // Call custom drawing callback if set
         if (_drawCallback)
         {
             _drawCallback(context.display, _x, _y, _width, _height);
@@ -88,7 +85,6 @@ namespace common::ui::components
         context.display.fillRoundRect(_x + x, _y + y, w, h, radius, static_cast<uint16_t>(color));
     }
 
-    // Screen implementation (root container)
     Screen::Screen() : _backgroundColor(Color::Black)
     {
     }
@@ -110,22 +106,17 @@ namespace common::ui::components
     {
         auto &display = get_display();
 
-        // Clear the display with background color
         display.fillScreen(static_cast<uint32_t>(static_cast<uint16_t>(_backgroundColor)));
 
         if (_child && _child->isVisible())
         {
-            // Measure and layout the child to fill the entire screen
             int screenWidth = get_screen_width();
             int screenHeight = get_screen_height();
 
             _child->measure(screenWidth, screenHeight);
             _child->layout(0, 0);
 
-            // Create render context
             RenderContext context(0, 0, screenWidth, screenHeight, display);
-
-            // Render the child
             return _child->render(context);
         }
 

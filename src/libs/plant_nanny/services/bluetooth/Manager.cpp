@@ -193,7 +193,7 @@ namespace plant_nanny::services::bluetooth
         // Truncate if necessary
         if (receivedData.length() > max_length)
         {
-            receivedData = receivedData.substr(0, max_length);
+            receivedData.resize(max_length);
         }
 
         LOG_IF_AVAILABLE(logger_, debug, ("Received " + std::to_string(receivedData.length()) + " bytes via Bluetooth").c_str());

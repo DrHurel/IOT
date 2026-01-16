@@ -27,13 +27,11 @@ namespace common::ui::components
 
     void Container::measure(int availableWidth, int availableHeight)
     {
-        // Container size includes margin on all sides
         _width = availableWidth;
         _height = availableHeight;
 
         if (_child)
         {
-            // Calculate available space for child (subtract margin, padding, and border)
             int borderWidth = _hasBorder ? 2 : 0;
             int childWidth = std::max(0, availableWidth - 2 * (_margin + _padding + borderWidth));
             int childHeight = std::max(0, availableHeight - 2 * (_margin + _padding + borderWidth));
@@ -49,7 +47,6 @@ namespace common::ui::components
 
         if (_child)
         {
-            // Position child with margin, padding, and border offset
             int borderWidth = _hasBorder ? 1 : 0;
             int childX = x + _margin + _padding + borderWidth;
             int childY = y + _margin + _padding + borderWidth;
@@ -67,7 +64,6 @@ namespace common::ui::components
 
         auto &display = context.display;
 
-        // Draw background with margin applied
         int bgX = _x + _margin;
         int bgY = _y + _margin;
         int bgWidth = _width - 2 * _margin;
@@ -77,14 +73,12 @@ namespace common::ui::components
         {
             display.fillRect(bgX, bgY, bgWidth, bgHeight, static_cast<uint16_t>(_backgroundColor));
 
-            // Draw border if enabled
             if (_hasBorder)
             {
                 display.drawRect(bgX, bgY, bgWidth, bgHeight, static_cast<uint16_t>(_borderColor));
             }
         }
 
-        // Render child if it exists
         if (_child && _child->isVisible())
         {
             int borderWidth = _hasBorder ? 1 : 0;

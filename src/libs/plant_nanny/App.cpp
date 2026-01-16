@@ -18,11 +18,10 @@ ESP_EVENT_DEFINE_BASE(common::APP_EVENTS);
 
 namespace plant_nanny
 {
-    App::App() : _event_loop(nullptr)
+    App::App() : _event_loop(nullptr),
+        _mqtt_client(std::make_unique<PubSubClient>()),
+        _pairingScreen(std::make_shared<ui::screens::PairingScreen>())
     {
-        _mqtt_client = std::make_unique<PubSubClient>();
-        _pairingScreen = std::make_shared<ui::screens::PairingScreen>();
-        
         esp_event_loop_args_t loop_args = {
             .queue_size = 10,
             .task_name = "app_loop",

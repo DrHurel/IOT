@@ -58,7 +58,7 @@ namespace common::patterns
         {
             return Result<T>(error);
         }
-        static Result<T> success(T value)
+        static Result<T> success(const T& value)
         {
             return Result<T>(value);
         }
@@ -70,10 +70,10 @@ namespace common::patterns
         }
 
     private:
-        T value_;
+        T value_{};
         std::optional<Error> error_;
-        explicit Result(Error const &error) : error_(error) {}
-        explicit Result(T value) : value_(value) {}
+        explicit Result(Error const &error) : value_{}, error_(error) {}
+        explicit Result(const T& value) : value_(value) {}
         template <typename... Args>
         explicit Result(Args... args) : value_(T(args...)) {}
     };

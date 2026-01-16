@@ -17,18 +17,9 @@ namespace common::ui::components
 
     void Text::measure(int availableWidth, int availableHeight)
     {
-        // Estimate text dimensions based on font size
-        // TFT_eSPI fonts have different sizes, we approximate here
         auto &display = get_display();
         display.setTextSize(_fontSize);
 
-        // Get text bounds (approximate)
-        int16_t x1, y1;
-        uint16_t w, h;
-        display.setTextSize(_fontSize);
-
-        // Approximate character dimensions
-        // This is a rough estimate - actual size depends on font
         int charWidth = 6 * _fontSize;
         int charHeight = 8 * _fontSize;
 
@@ -45,15 +36,12 @@ namespace common::ui::components
 
         auto &display = context.display;
 
-        // Set text properties
         display.setTextSize(_fontSize);
         display.setTextColor(static_cast<uint16_t>(_foregroundColor), static_cast<uint16_t>(_backgroundColor));
 
-        // Calculate text position based on alignment
         int textX = _x;
         int textY = _y;
 
-        // Set cursor and draw
         switch (_align)
         {
         case Align::LEFT:
@@ -62,33 +50,29 @@ namespace common::ui::components
 
         case Align::CENTER:
         {
-            // Approximate center alignment
             int charWidth = 6 * _fontSize;
             int textWidth = _text.length() * charWidth;
             textX = _x + (_width - textWidth) / 2;
             if (textX < _x)
-                textX = _x; // Ensure we don't go negative
+                textX = _x;
             display.setCursor(textX, textY);
         }
         break;
 
         case Align::RIGHT:
         {
-            // Approximate right alignment
             int charWidth = 6 * _fontSize;
             int textWidth = _text.length() * charWidth;
             textX = _x + _width - textWidth;
             if (textX < _x)
-                textX = _x; // Ensure we don't go negative
+                textX = _x;
             display.setCursor(textX, textY);
         }
         break;
         }
 
-        // Draw the text
         display.print(_text.c_str());
 
-        // Draw underline if requested
         if (_underline)
         {
             int charHeight = 8 * _fontSize;

@@ -106,7 +106,7 @@ namespace plant_nanny::services::bluetooth
         std::string _expectedPin;
 
     public:
-        PairingServerCallbacks(const std::string& pin) : _expectedPin(pin) {}
+        explicit PairingServerCallbacks(const std::string& pin) : _expectedPin(pin) {}
 
         void setPin(const std::string& pin) { _expectedPin = pin; }
 
@@ -194,7 +194,7 @@ namespace plant_nanny::services::bluetooth
     {
         uint32_t pin = 100000 + (esp_random() % 900000);
         char pinStr[7];
-        snprintf(pinStr, sizeof(pinStr), "%06d", pin);
+        snprintf(pinStr, sizeof(pinStr), "%06u", pin);
         return std::string(pinStr);
     }
 
