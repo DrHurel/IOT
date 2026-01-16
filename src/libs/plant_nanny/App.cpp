@@ -82,9 +82,9 @@ namespace plant_nanny
         // Apply development configuration if in debug mode
         services::dev::DevConfig::apply(_configManager);
         
-        // Initialize pump on GPIO 38
-        _pump.initialize(38);
-        LOG_INFO("[APP] Pump initialized (GPIO 38)");
+        // Initialize pump on GPIO 13
+        _pump.initialize(13);
+        LOG_INFO("[APP] Pump initialized (GPIO 13)");
         
         // Test pump LED
         Serial.println("[APP] Turning LED ON...");
@@ -363,8 +363,18 @@ namespace plant_nanny
                 ESP.restart();
                 break;
             case services::mqtt::CommandType::PumpWater:
-                LOG_INFO("[APP] Pump water command received");
-                // TODO: Implement pump control
+                {
+                    char msg[64];
+                    snprintf(msg, sizeof(msg), "[APP] Pump water command received (%dms)", cmd.durationMs);
+                    LOG_INFO(msg);
+                    
+                    // Activate pump for the requested duration
+                    _pump.activate();
+                    delay(cmd.durationMs > 0 ? cmd.durationMs : 5000);  // Default 5s if not specified
+                    _pump.deactivate();
+                    
+                    LOG_INFO("[APP] Pump water completed");
+                }
                 break;
             default:
                 break;
