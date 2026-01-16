@@ -1,15 +1,15 @@
 #include "libs/plant_nanny/services/mqtt/MqttCommandHandler.h"
 #include "libs/plant_nanny/services/mqtt/MQTTService.h"
 #include "libs/plant_nanny/services/pump/IPump.h"
-#include <libs/common/service/Registry.h>
 #include "libs/common/logger/Log.h"
 #include <Arduino.h>
+#include "libs/common/service/Accessor.h"
 
 namespace plant_nanny::services::mqtt
 {
 
 MqttCommandHandler::MqttCommandHandler()
-    : _pump(common::service::DefaultRegistry::instance().get<pump::IPump>())
+    : _pump(&common::service::get<pump::IPump>().get())
 {
 }
 

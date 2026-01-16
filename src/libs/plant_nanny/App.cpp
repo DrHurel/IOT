@@ -264,10 +264,10 @@ namespace plant_nanny
 
     void App::run()
     {
-        common::service::DefaultRegistry::instance().get<services::button::IButtonHandler>()->poll();
+        common::service::get<services::button::IButtonHandler>()->poll();
         _stateMachine.update(*this);
-        common::service::DefaultRegistry::instance().get<services::network::INetworkService>()->maintain_connection();
-        common::service::DefaultRegistry::instance().get<services::mqtt::IMQTTService>()->update();
+        common::service::get<services::network::INetworkService>()->maintain_connection();
+        common::service::get<services::mqtt::IMQTTService>()->update();
 
         if (!_pendingTransition.empty())
         {

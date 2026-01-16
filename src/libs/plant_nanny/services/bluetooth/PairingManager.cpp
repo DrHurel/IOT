@@ -5,6 +5,7 @@
 #include <NimBLEDevice.h>
 #include <WiFi.h>
 #include "libs/common/logger/Log.h"
+#include "libs/common/service/Accessor.h"
 
 namespace plant_nanny::services::bluetooth
 {
@@ -173,8 +174,8 @@ namespace plant_nanny::services::bluetooth
         initialize();
         
         // Get device ID from ConfigManager if available
-        auto* configManager = common::service::DefaultRegistry::instance().get<config::IConfigManager>();
-        if (configManager)
+        auto configManager = common::service::get<config::IConfigManager>();
+        if (configManager.is_available())
         {
             std::string deviceId = configManager->getOrCreateDeviceId();
             setDeviceId(deviceId);
