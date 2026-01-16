@@ -8,6 +8,12 @@
 #include <string>
 #include <cstdint>
 
+// Forward declarations for NimBLE types
+class NimBLEServer;
+class NimBLECharacteristic;
+class NimBLEServerCallbacks;
+class NimBLECharacteristicCallbacks;
+
 namespace plant_nanny::services::bluetooth
 {
     enum class PairingState
@@ -42,12 +48,31 @@ namespace plant_nanny::services::bluetooth
     using MqttConfigCallback = std::function<void(const MqttConfig& config)>;
     using StateChangeCallback = std::function<void(PairingState newState)>;
 
+    /**
+     * @brief Holds all BLE characteristic pointers for the pairing service
+     */
+    struct BleCharacteristics
+    {
+        NimBLECharacteristic* configStatus = nullptr;
+        NimBLECharacteristic* wifiSsid = nullptr;
+        NimBLECharacteristic* wifiPass = nullptr;
+        NimBLECharacteristic* mqttHost = nullptr;
+        NimBLECharacteristic* mqttPort = nullptr;
+        NimBLECharacteristic* mqttUsername = nullptr;
+        NimBLECharacteristic* mqttPassword = nullptr;
+        NimBLECharacteristic* deviceId = nullptr;
+        NimBLECharacteristic* ipAddress = nullptr;
+        NimBLECharacteristic* serverId = nullptr;
+        NimBLECharacteristic* wifiNetworks = nullptr;
+        NimBLECharacteristic* pin = nullptr;
+    };
+
     class PairingManager : public IPairingManager
     {
     private:
         PairingState _state;
         std::string _currentPin;
-        std::string _deviceId;  // Device ID to expose via BLE
+        std::string _deviceId;
         PinDisplayCallback _pinDisplayCallback;
         PairingCompleteCallback _pairingCompleteCallback;
         WifiConfigCallback _wifiConfigCallback;
@@ -56,6 +81,12 @@ namespace plant_nanny::services::bluetooth
         bool _initialized;
         unsigned long _pairingStartTime;
         static constexpr unsigned long PAIRING_TIMEOUT_MS = 120000;
+
+        // BLE objects
+        NimBLEServer* _pServer = nullptr;
+        NimBLEServerCallbacks* _pServerCallbacks = nullptr;
+        NimBLECharacteristicCallbacks* _pCharCallbacks = nullptr;
+        BleCharacteristics _chars;
 
         /**
          * @brief Generate a random 6-digit PIN
@@ -67,8 +98,34 @@ namespace plant_nanny::services::bluetooth
          */
         void setupServices();
 
+        /**
+         * @brief Read MQTT config from characteristics and invoke callback
+         */
+        void processMqttConfig();
+
     public:
         static constexpr const char* DEVICE_NAME = "PlantNanny";
+        
+        // Status string constants
+        struct Status {
+            static constexpr const char* READY = "READY";
+            static constexpr const char* AWAITING_PIN = "AWAITING_PIN";
+            static constexpr const char* AWAITING_CONFIG = "AWAITING_CONFIG";
+            static constexpr const char* PIN_OK = "PIN_OK";
+            static constexpr const char* PIN_INVALID = "PIN_INVALID";
+            static constexpr const char* WIFI_CONFIGURED = "WIFI_CONFIGURED";
+            static constexpr const char* WIFI_FAILED = "WIFI_FAILED";
+        };
+
+        /**
+         * @brief Process received WiFi and MQTT credentials (used by callbacks)
+         */
+        void processCredentials(const std::string& ssid, const std::string& pass);
+
+        /**
+         * @brief Update config status characteristic and notify (used by callbacks)
+         */
+        void setConfigStatus(const char* status);
         
         // Service UUIDs
         static constexpr const char* CONFIG_SERVICE_UUID = "12345678-1234-5678-1234-56789abcdef0";
@@ -120,6 +177,10 @@ namespace plant_nanny::services::bluetooth
         void onWifiCredentialsReceived(const std::string& ssid, const std::string& password);
         void onMqttConfigReceived(const std::string& host, uint16_t port, 
                                   const std::string& username, const std::string& password);
+
+        // Accessors for BLE objects (used by callbacks)
+        BleCharacteristics& chars() { return _chars; }
+        NimBLEServer* server() const { return _pServer; }
     };
 
 } // namespace plant_nanny::services::bluetooth
