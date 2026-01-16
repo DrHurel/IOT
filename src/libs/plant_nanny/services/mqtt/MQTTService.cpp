@@ -18,7 +18,6 @@ namespace plant_nanny::services::mqtt
         , publish_interval_ms_(DEFAULT_PUBLISH_INTERVAL_MS)
         , reading_callback_(nullptr)
         , command_callback_(nullptr)
-        , use_new_topic_structure_(true)
     {
         instance_ = this;
     }
@@ -61,7 +60,6 @@ namespace plant_nanny::services::mqtt
         device_id_ = device_id;
         broker_host_ = broker_host;
         broker_port_ = broker_port;
-        use_new_topic_structure_ = true;
 
         mqtt_client_.setServer(broker_host_.c_str(), broker_port_);
         mqtt_client_.setKeepAlive(60);
@@ -127,36 +125,19 @@ namespace plant_nanny::services::mqtt
         return const_cast<PubSubClient&>(mqtt_client_).connected();
     }
 
-    std::string MQTTService::build_topic(const char* suffix) const
-    {
-        return "plantnanny/" + device_id_ + "/" + suffix;
-    }
-
     std::string MQTTService::build_data_topic() const
     {
-        if (use_new_topic_structure_)
-        {
-            return "devices/" + device_id_ + "/data";
-        }
-        return build_topic("sensors");
+        return "devices/" + device_id_ + "/data";
     }
 
     std::string MQTTService::build_command_topic() const
     {
-        if (use_new_topic_structure_)
-        {
-            return "devices/" + device_id_ + "/command";
-        }
-        return build_topic("command");
+        return "devices/" + device_id_ + "/command";
     }
 
     std::string MQTTService::build_status_topic() const
     {
-        if (use_new_topic_structure_)
-        {
-            return "devices/" + device_id_ + "/status";
-        }
-        return build_topic("status");
+        return "devices/" + device_id_ + "/status";
     }
 
     void MQTTService::subscribe_to_commands()

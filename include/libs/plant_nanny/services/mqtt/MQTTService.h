@@ -64,8 +64,6 @@ namespace plant_nanny::services::mqtt
         ReadingCallback reading_callback_;
         CommandCallback command_callback_;
 
-        bool use_new_topic_structure_;
-
         static constexpr uint32_t DEFAULT_PUBLISH_INTERVAL_MS = 60000;
         static constexpr uint32_t RECONNECT_INTERVAL_MS = 5000;
         static constexpr uint32_t MQTT_TIMEOUT_MS = 5000;
@@ -76,7 +74,6 @@ namespace plant_nanny::services::mqtt
         void subscribe_to_commands();
         void handle_message(char* topic, byte* payload, unsigned int length);
         Command parse_command(const char* payload, unsigned int length);
-        std::string build_topic(const char* suffix) const;
         std::string build_data_topic() const;
         std::string build_command_topic() const;
         std::string build_status_topic() const;

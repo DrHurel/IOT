@@ -17,7 +17,6 @@ namespace plant_nanny::services::network
         common::service::Accessor<common::logger::Logger> logger_;
         std::string ssid_;
         std::string password_;
-        bool connected_;
         uint32_t last_connection_attempt_;
         static constexpr uint32_t RECONNECT_INTERVAL_MS = 30000;
 

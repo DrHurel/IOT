@@ -6,7 +6,7 @@
 namespace plant_nanny::services::network
 {
     Manager::Manager()
-        : logger_(common::service::get<common::logger::Logger>()), connected_(false), last_connection_attempt_(0)
+        : logger_(common::service::get<common::logger::Logger>()), last_connection_attempt_(0)
     {
         LOG_IF_AVAILABLE(logger_, info, "Network Manager initialized");
     }
@@ -39,13 +39,11 @@ namespace plant_nanny::services::network
         if (WiFi.status() == WL_CONNECTED)
         {
             LOG_IF_AVAILABLE(logger_, info, "WiFi connected");
-            connected_ = true;
             return true;
         }
         else
         {
             LOG_IF_AVAILABLE(logger_, error, "WiFi connection failed");
-            connected_ = false;
             return false;
         }
     }
@@ -64,7 +62,6 @@ namespace plant_nanny::services::network
     {
         WiFi.disconnect();
         LOG_IF_AVAILABLE(logger_, info, "WiFi disconnected");
-        connected_ = false;
     }
 
     bool Manager::is_connected() const

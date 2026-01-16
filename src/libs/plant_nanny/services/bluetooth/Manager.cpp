@@ -12,7 +12,6 @@ namespace plant_nanny::services::bluetooth
     static NimBLECharacteristic *pTxCharacteristic = nullptr;
     static NimBLECharacteristic *pRxCharacteristic = nullptr;
     static bool deviceConnected = false;
-    static bool oldDeviceConnected = false;
     static std::string receivedData;
     static bool dataAvailable = false;
 
@@ -107,7 +106,6 @@ namespace plant_nanny::services::bluetooth
                 pTxCharacteristic = nullptr;
                 pRxCharacteristic = nullptr;
                 deviceConnected = false;
-                oldDeviceConnected = false;
             }
 
             LOG_IF_AVAILABLE(logger_, info, "Bluetooth channel closed successfully");
