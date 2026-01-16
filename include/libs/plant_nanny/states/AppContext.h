@@ -22,10 +22,7 @@ namespace plant_nanny
         // Screen navigation
         virtual ui::ScreenManager& screenManager() = 0;
         
-        // Services access (DIP - depend on abstractions)
-        virtual services::bluetooth::IPairingManager& pairingManager() = 0;
-        virtual services::config::IConfigManager& configManager() = 0;
-        
+
         // State data
         virtual void setCurrentPin(const std::string& pin) = 0;
         virtual const std::string& currentPin() const = 0;

@@ -4,6 +4,8 @@
 #include "libs/plant_nanny/states/AppContext.h"
 #include "libs/common/service/Accessor.h"
 #include "libs/common/logger/Logger.h"
+#include "libs/plant_nanny/services/config/IConfigManager.h"
+#include "libs/plant_nanny/services/bluetooth/IPairingManager.h"
 #include <Arduino.h>
 
 namespace plant_nanny::states
@@ -41,8 +43,11 @@ namespace plant_nanny::states
             _pairingSuccess = false;
             _alreadyPaired = false;
             
+            auto configManager = common::service::get<services::config::IConfigManager>();
+            auto pairingManager = common::service::get<services::bluetooth::IPairingManager>();
+            
             // Check if device is already configured - require factory reset to re-pair
-            if (context.configManager().isConfigured())
+            if (configManager->isConfigured())
             {
                 log_pairing("[STATE] Device already paired - showing reset required screen");
                 context.screenManager().navigateTo("already_paired");
@@ -50,15 +55,15 @@ namespace plant_nanny::states
                 return;
             }
             
-            auto result = context.pairingManager().startPairing();
+            auto result = pairingManager->startPairing();
             if (result.succeed())
             {
-                std::string pin = context.pairingManager().getCurrentPin();
+                std::string pin = pairingManager->getCurrentPin();
                 context.setCurrentPin(pin);
                 context.pairingScreen().setPin(pin);
                 context.screenManager().navigateTo("pairing");
                 
-                context.pairingManager().setPairingCompleteCallback([this](bool success) {
+                pairingManager->setPairingCompleteCallback([this](bool success) {
                     _pairingComplete = true;
                     _pairingSuccess = success;
                 });
@@ -68,7 +73,8 @@ namespace plant_nanny::states
 
         void onExit(AppContext& context) override
         {
-            context.pairingManager().stopPairing();
+            auto pairingManager = common::service::get<services::bluetooth::IPairingManager>();
+            pairingManager->stopPairing();
             context.setCurrentPin("");
         }
 
@@ -93,7 +99,8 @@ namespace plant_nanny::states
                 return;
             }
             
-            context.pairingManager().update();
+            auto pairingManager = common::service::get<services::bluetooth::IPairingManager>();
+            pairingManager->update();
             
             if (_pairingComplete)
             {

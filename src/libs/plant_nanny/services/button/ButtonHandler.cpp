@@ -12,6 +12,7 @@ namespace plant_nanny::services::button
         , _leftLongPressTriggered(false)
         , _rightLongPressTriggered(false)
     {
+        initialize();
     }
 
     common::patterns::Result<void> ButtonHandler::initialize()

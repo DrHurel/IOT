@@ -11,6 +11,7 @@ namespace plant_nanny::services::config
     ConfigManager::ConfigManager()
         : _initialized(false)
     {
+        initialize();
     }
 
     common::patterns::Result<void> ConfigManager::initialize()

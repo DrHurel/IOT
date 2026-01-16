@@ -5,6 +5,19 @@
 namespace plant_nanny::services::captors
 {
 
+SensorManager::SensorManager()
+{
+    auto config = SensorManagerConfig::defaultConfig();
+    initialize(config.pins);
+    configureThermistor(config.thermistorConfig);
+}
+
+SensorManager::SensorManager(const SensorManagerConfig& config)
+{
+    initialize(config.pins);
+    configureThermistor(config.thermistorConfig);
+}
+
 void SensorManager::initialize()
 {
     initialize(SensorPins{});

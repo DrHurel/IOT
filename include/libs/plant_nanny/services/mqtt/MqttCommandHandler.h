@@ -19,7 +19,7 @@ namespace plant_nanny::services::mqtt
         OtaUpdateCallback _otaCallback;
 
     public:
-        explicit MqttCommandHandler(IPump* pump);
+        MqttCommandHandler();
         ~MqttCommandHandler() override = default;
 
         MqttCommandHandler(const MqttCommandHandler&) = delete;

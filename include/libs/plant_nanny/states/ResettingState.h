@@ -4,6 +4,8 @@
 #include "libs/plant_nanny/states/AppContext.h"
 #include "libs/common/service/Accessor.h"
 #include "libs/common/logger/Logger.h"
+#include "libs/plant_nanny/services/config/IConfigManager.h"
+#include "libs/plant_nanny/services/bluetooth/IPairingManager.h"
 #include <Arduino.h>
 
 namespace plant_nanny::states
@@ -36,8 +38,10 @@ namespace plant_nanny::states
             log_reset("[STATE] Entered Resetting");
             
             // Perform reset
-            context.configManager().factoryReset();
-            context.pairingManager().unpair();
+            auto configManager = common::service::get<services::config::IConfigManager>();
+            auto pairingManager = common::service::get<services::bluetooth::IPairingManager>();
+            configManager->factoryReset();
+            pairingManager->unpair();
             
             delay(2000);
             ESP.restart();

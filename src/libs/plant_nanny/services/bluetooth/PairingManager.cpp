@@ -1,4 +1,6 @@
 #include "libs/plant_nanny/services/bluetooth/PairingManager.h"
+#include "libs/plant_nanny/services/config/IConfigManager.h"
+#include <libs/common/service/Registry.h>
 #include <Arduino.h>
 #include <NimBLEDevice.h>
 #include <WiFi.h>
@@ -168,6 +170,15 @@ namespace plant_nanny::services::bluetooth
         , _pairingStartTime(0)
     {
         g_pairingManager = this;
+        initialize();
+        
+        // Get device ID from ConfigManager if available
+        auto* configManager = common::service::DefaultRegistry::instance().get<config::IConfigManager>();
+        if (configManager)
+        {
+            std::string deviceId = configManager->getOrCreateDeviceId();
+            setDeviceId(deviceId);
+        }
     }
 
     PairingManager::~PairingManager()

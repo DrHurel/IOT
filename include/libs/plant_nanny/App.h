@@ -77,10 +77,9 @@ namespace plant_nanny
         // Initialization helpers
         void setupScreens();
         void setupStates();
-        void setupServiceCallbacks();
-        void setupSensors();
-        void setupNetwork();
-        void setupMqtt();
+        void setupAppCallbacks();
+        void initMqttCallbacks();
+        void tryConnectNetwork();
 
     public:
         /**
@@ -101,20 +100,13 @@ namespace plant_nanny
 
         // AppContext interface
         ui::ScreenManager& screenManager() override { return _screenManager; }
-        services::bluetooth::IPairingManager& pairingManager() override;
-        services::config::IConfigManager& configManager() override;
         void setCurrentPin(const std::string& pin) override { _currentPin = pin; }
         const std::string& currentPin() const override { return _currentPin; }
         ui::screens::PairingScreen& pairingScreen() override { return *_pairingScreen; }
         void requestTransition(const std::string& stateId) override { _pendingTransition = stateId; }
 
-        // Network management
-        void configure_wifi(const std::string &ssid, const std::string &password);
-        bool is_network_connected() const;
 
-        // Pump control
-        void setPumpActive(bool active);
-        bool isPumpActive() const;
+
 
         // OTA management
         common::patterns::Result<void> perform_ota_update(const std::string &firmware_url);

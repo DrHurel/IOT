@@ -7,6 +7,28 @@
 
 namespace plant_nanny::services::captors
 {
+    /**
+     * @brief Configuration for SensorManager
+     */
+    struct SensorManagerConfig
+    {
+        SensorPins pins;
+        temperature::ThermistorConfig thermistorConfig;
+        
+        static SensorManagerConfig defaultConfig()
+        {
+            SensorManagerConfig config;
+            config.pins.thermistorPin = 33;
+            config.pins.ldrPin = 37;
+            config.pins.powerPin = 26;
+            config.thermistorConfig.nominalResistance = 10000.0f;
+            config.thermistorConfig.nominalTemperature = 25.0f;
+            config.thermistorConfig.betaCoefficient = 3950.0f;
+            config.thermistorConfig.seriesResistance = 5600.0f;
+            return config;
+        }
+    };
+
     class SensorManager : public ISensorManager
     {
     private:
@@ -17,7 +39,8 @@ namespace plant_nanny::services::captors
         bool _initialized = false;
 
     public:
-        SensorManager() = default;
+        SensorManager();
+        explicit SensorManager(const SensorManagerConfig& config);
         ~SensorManager() override = default;
         
         SensorManager(const SensorManager&) = delete;
@@ -30,19 +53,8 @@ namespace plant_nanny::services::captors
         void configureThermistor(const temperature::ThermistorConfig& config) override;
         SensorData read() override;
         
-        /**
-         * @brief Access temperature sensor directly
-         */
         temperature::Temperature& temperature() { return _temperature; }
-        
-        /**
-         * @brief Access luminosity sensor directly
-         */
         luminosity::Luminosity& luminosity() { return _luminosity; }
-        
-        /**
-         * @brief Access humidity sensor directly
-         */
         humidity::Humidity& humidity() { return _humidity; }
         
         bool isInitialized() const { return _initialized; }

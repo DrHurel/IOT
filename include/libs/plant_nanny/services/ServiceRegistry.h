@@ -35,25 +35,33 @@ namespace plant_nanny::services
     /**
      * @brief Register all plant_nanny services in the common::service registry
      * 
-     * This follows the Dependency Inversion Principle - all services are registered
-     * by their interfaces, allowing for easy mocking and testing.
+     * Services are registered in dependency order:
+     * 1. ConfigManager (no dependencies, needed by PairingManager)
+     * 2. ButtonHandler (no dependencies)
+     * 3. SensorManager (no dependencies, self-configures)
+     * 4. NetworkManager (no dependencies)
+     * 5. MQTTService (no dependencies)
+     * 6. Pump (no dependencies)
+     * 7. PairingManager (depends on ConfigManager for device ID)
+     * 8. MqttCommandHandler (depends on Pump)
      * 
      * IMPORTANT: Call common::service::DefaultRegistry::create() before calling this.
      */
     inline void registerServices(const ServiceConfig& config = ServiceConfig{})
     {
-        // Register core services
-        common::service::add<button::IButtonHandler, button::ButtonHandler>();
-        common::service::add<bluetooth::IPairingManager, bluetooth::PairingManager>();
-        common::service::add<captors::ISensorManager, captors::SensorManager>();
+        // 1. ConfigManager first - other services depend on it
         common::service::add<config::IConfigManager, config::ConfigManager>();
+        
+        // 2. Independent services (no dependencies)
+        common::service::add<button::IButtonHandler, button::ButtonHandler>();
+        common::service::add<captors::ISensorManager, captors::SensorManager>();
         common::service::add<network::INetworkService, network::Manager>();
         common::service::add<mqtt::IMQTTService, mqtt::MQTTService>();
         common::service::add<pump::IPump, pump::Pump>(config.pumpGpioPin);
         
-        // Register command handler with pump dependency
-        auto* pump = common::service::DefaultRegistry::instance().get<pump::IPump>();
-        common::service::add<mqtt::IMqttCommandHandler, mqtt::MqttCommandHandler>(pump);
+        // 3. Services with dependencies
+        common::service::add<bluetooth::IPairingManager, bluetooth::PairingManager>(); // depends on ConfigManager
+        common::service::add<mqtt::IMqttCommandHandler, mqtt::MqttCommandHandler>();   // depends on Pump
     }
 
 } // namespace plant_nanny::services
